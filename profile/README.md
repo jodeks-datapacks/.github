@@ -1,3 +1,3 @@
 # Jodeks Datapacks
 
-Handcrafted Datapacks made with love ❤
+Handcrafted datapacks made with love ❤
