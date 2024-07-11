@@ -1,3 +1,3 @@
-# Jodeks Datapacks
+# jodeks datapacks
 
 Handcrafted datapacks made with love ❤
