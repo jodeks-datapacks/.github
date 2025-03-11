@@ -1,0 +1,11 @@
+{
+  "category_mapping": {
+    "security": "Security",
+    "library": "Library"
+  },
+  "blacklist": [
+    ".github",
+    "Template",
+    "default"
+  ]
+}
