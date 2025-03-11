@@ -1,6 +1,6 @@
 {
   "category_mapping": {
-    "security": "Security",
+    "environment": "Environment",
     "library": "Library"
   },
   "blacklist": [
