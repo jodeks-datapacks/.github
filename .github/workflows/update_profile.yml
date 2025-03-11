@@ -1,0 +1,168 @@
+name: 'Update Profile README'
+
+on:
+  schedule:
+    - cron: '30 */24 * * *'
+  
+  push:
+    paths:
+      - "profile/template/*"
+      - ".github/workflows/update_profile.yml"
+      - ".github/workflows/profile_config.json"
+  
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  PATH_PROFILE_CONFIG: ".github/workflows/profile_config.json"
+  PATH_TEMPLATE_DIRECTORY: "profile/template"
+  
+jobs:
+  collect-categories:
+    name: 'Update Profile README'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v3
+
+      - name: Get all public repositories from the organization
+        id: repos
+        run: |
+          organization="${{ github.repository_owner }}"
+          repositories_url="https://api.github.com/orgs/$organization/repos?type=public"
+          
+          # Read the config file
+          config=$(cat "$PATH_PROFILE_CONFIG")
+          
+          # Extract the blacklist and category mapping
+          blacklist=$(echo "$config" | jq -r '.blacklist[]')
+          category_mapping=$(echo "$config" | jq -r '.category_mapping')
+
+          echo "Fetching all public repositories for \"$organization\"..."
+          repositories_response=$(curl -s $repositories_url)
+          
+          repository_names=$(echo "$repositories_response" | jq -r '.[].name')
+
+          echo "::group:: Found the following repositories"
+          echo "$repository_names" | sed 's/[^ ]*/- &/g'
+          echo "::endgroup::"
+          
+          # Initial JSON object for category data
+          category_data="{
+            \"categories\": []
+          }"
+
+          echo "Processing repositories..."
+          for repository_name in $repository_names; do
+              echo "::group:: Processing \"$repository_name\""
+              
+              # Skip repository if it's in the blacklist
+              if echo "$blacklist" | grep -q "$repository_name"; then
+                  echo "::warning:: Ignoring repository \"$repository_name\" due to blacklist."
+                  echo "::endgroup::"
+                  continue
+              fi
+              
+              repository_url="https://github.com/$organization/$repository_name"
+              labels_url="https://api.github.com/repos/$organization/$repository_name/labels"
+              
+              echo "Fetching labels..."
+              labels_response=$(curl -s $labels_url)
+
+              # Extract all categories (labels with prefix "category: ")
+              categories=$(echo "$labels_response" | jq -r '.[] | select(.name | startswith("category: ")) | .name' | sed 's/category: //')
+
+              if [[ -z "$categories" ]]; then
+                  echo "::warning:: Ignoring repository \"$repository_name\" because no categories were found."
+                  echo "::endgroup::"
+                  continue
+              fi
+              
+              echo "Found label categories: $categories"
+              
+              # Add an entry in the JSON for each found category
+              for category in $categories; do
+                  echo "Generating JSON entry for category \"$category\"..."
+                  category_data=$(echo "$category_data" | jq \
+                    --arg category "$category" \
+                    --arg repository_url "$repository_url" \
+                    --arg repository_name "$repository_name" \
+                    '
+                      if (.categories | map(select(.id == $category)) | length > 0) then
+                        .categories |= map(
+                          if .id == $category then
+                            .repositories += [{"url": $repository_url, "name": $repository_name}]
+                          else . end
+                        )
+                      else
+                        .categories += [{"id": $category, "repositories": [{"url": $repository_url, "name": $repository_name}]}]
+                      end
+                    ')
+              done
+              
+              echo "::endgroup::"
+          done
+
+          echo "Done generating JSON data"
+          
+          echo "$category_data" > "profile/category_data.json"
+
+      - name: Generate README from Template
+        run: |
+          config=$(cat "$PATH_PROFILE_CONFIG")
+          category_mapping=$(echo "$config" | jq -r '.category_mapping')
+
+          # Read Markdown templates
+          template_md=$(<"$PATH_TEMPLATE_DIRECTORY/readme.md")
+          category_template=$(<"$PATH_TEMPLATE_DIRECTORY/category.md")
+          repository_template=$(<"$PATH_TEMPLATE_DIRECTORY/repository.md")
+          
+          # Generate the 'categories' section
+          categories_content=""
+          for category in $(jq -r '.categories[].id' "profile/category_data.json"); do
+              # Find the correct name for the category
+              category_name=$(echo "$category_mapping" | jq -r --arg category "$category" '.[$category]')
+              if [ "$category_name" == "null" ]; then
+                category_name="$category"  # Use the category id as the name if no mapping exists
+              fi
+              
+              # Generate the 'repositories' section for each category
+              repositories_content=""
+              for repo in $(jq -r ".categories[] | select(.id == \"$category\") | .repositories[] | @base64" "profile/category_data.json"); do
+                  _jq() {
+                    echo ${repo} | base64 --decode | jq -r ${1}
+                  }
+                  repo_name=$(_jq '.name')
+                  repo_url=$(_jq '.url')
+                  
+                  # Replace the placeholder for the repository
+                  repo_markdown=$(echo "$repository_template" | awk -v name="$repo_name" -v url="$repo_url" '{gsub(/\${repository_name}/, name); gsub(/\${repository_url}/, url); print}')
+                  repositories_content+="$repo_markdown\n"
+              done
+              
+              # Replace the placeholder for the category
+              category_markdown=$(echo "$category_template" | awk -v name="$category_name" -v repos="$repositories_content" '{gsub(/\${category_name}/, name); gsub(/\${repositories}/, repos); print}')
+              categories_content+="$category_markdown\n"
+          done
+          
+          # Replace the placeholder ${categories} in the main template
+          final_md=$(echo "$template_md" | awk -v categories="$categories_content" '{gsub(/\${categories}/, categories); print}')
+
+          echo "::group:: Done generating Markdown file"
+          echo $final_md
+          echo "::endgroup::"
+          
+          # Save the final README
+          echo "$final_md" > "profile/README.md"
+
+      - name: 'Commit and push new README.md'
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git add "profile/README.md"
+          git commit -a -m "Update README" || exit 0
+          git push origin main
