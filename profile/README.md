@@ -12,3 +12,4 @@ Handcrafted datapacks made with love ❤
 ## Environment
 [`Sleep`](https://github.com/jodeks-datapacks/Sleep)
 [`No-Enderman-Grief`](https://github.com/jodeks-datapacks/No-Enderman-Grief)
+[`Mob-Heads`](https://github.com/jodeks-datapacks/Mob-Heads)
