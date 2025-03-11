@@ -1,4 +1,7 @@
-# Datapacks
+# jodeks datapacks
+
+Handcrafted datapacks made with love ❤
+
 > [All Datapacks](https://github.com/orgs/jodeks-datapacks/repositories)
 
 <!--
