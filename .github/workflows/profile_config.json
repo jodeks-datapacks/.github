@@ -2,7 +2,7 @@
   "category_mapping": {
     "environment": "Environment",
     "library": "Library",
-    "entities:": "Entities",
+    "entities": "Entities",
     "crafting": "Crafting",
     "trading": "Trading",
     "tools": "Tools"
