@@ -16,7 +16,7 @@ body:
         - 'Add the specified existing category to the Repository/Datapack'
         - 'Remove the specified existing category from the Repository/Datapack'
         - 'Add a new category'
-        - 'Remove a category'
+        - 'Remove an existing category'
     validations:
       required: true
       
