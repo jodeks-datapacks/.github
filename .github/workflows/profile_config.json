@@ -1,7 +1,11 @@
 {
   "category_mapping": {
     "environment": "Environment",
-    "library": "Library"
+    "library": "Library",
+    "entities:": "Entities",
+    "crafting": "Crafting",
+    "trading": "Trading",
+    "tools": "Tools"
   },
   "blacklist": [
     ".github",
