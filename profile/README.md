@@ -68,4 +68,4 @@ Handcrafted datapacks made with love ❤
 
 ---
 
-> Can't find what you are seraching for? [Open an issue](https://github.com/jodeks-datapacks/.github/issues/new?template=category.yml) so that we can change the categories.
+##### Can't find what you are seraching for? [Open an issue](https://github.com/jodeks-datapacks/.github/issues/new?template=category.yml) so that we can change the categories.
