@@ -1,0 +1,47 @@
+name: 'Category'
+description: 'Request the change of a category for a Repository/Datapack.'
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Request the change of a category for a Repository/Datapack.
+        
+  - type: dropdown
+    id: change
+    attributes:
+      label: 'Type of change'
+      description: 'URL of the Repository/Datapack.'
+      options:
+        - 'Add the specified existing category to the Repository/Datapack'
+        - 'Remove the specified existing category from the Repository/Datapack'
+        - 'Add a new category'
+        - 'Remove a category'
+    validations:
+      required: true
+      
+  - type: input
+    id: category
+    attributes:
+      label: 'Category'
+      description: 'Name of the category.'
+      placeholder: 'ex. Tools'
+    validations:
+      required: true
+      
+  - type: input
+    id: url
+    attributes:
+      label: 'Repository/Datapack URL'
+      description: 'URL of the Repository/Datapack.'
+      placeholder: 'https://github.com/jodeks-datapacks/Sleep'
+    validations:
+      required: true
+
+  - type: textarea
+    id: reason
+    attributes:
+      label: 'Reason for change'
+      description: 'Why do you want this change to be made?'
+      placeholder: 'Tell us...'
+    validations:
+      required: false
