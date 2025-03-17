@@ -56,6 +56,8 @@ Handcrafted datapacks made with love ❤
 [`Mine-Glass-Without-Silk-Touch`](https://github.com/jodeks-datapacks/Mine-Glass-Without-Silk-Touch)
 [`Mineable-Spawner`](https://github.com/jodeks-datapacks/Mineable-Spawner)
 [`Too-Expensive-Removed`](https://github.com/jodeks-datapacks/Too-Expensive-Removed)
+## Loot
+[`Mob-Heads`](https://github.com/jodeks-datapacks/Mob-Heads)
 ## Enchanting
 [`Too-Expensive-Removed`](https://github.com/jodeks-datapacks/Too-Expensive-Removed)
 ## Trading
