@@ -1,5 +1,6 @@
 name: 'Category'
 description: 'Request the change of a category for a Repository/Datapack.'
+title: 'Category change'
 body:
   - type: markdown
     attributes:
