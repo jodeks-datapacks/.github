@@ -58,6 +58,7 @@ Handcrafted datapacks made with love ❤
 [`Too-Expensive-Removed`](https://github.com/jodeks-datapacks/Too-Expensive-Removed)
 ## Loot
 [`Mob-Heads`](https://github.com/jodeks-datapacks/Mob-Heads)
+[`Player-Drops-Head`](https://github.com/jodeks-datapacks/Player-Drops-Head)
 ## Enchanting
 [`Too-Expensive-Removed`](https://github.com/jodeks-datapacks/Too-Expensive-Removed)
 ## Trading
