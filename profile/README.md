@@ -48,7 +48,7 @@ Handcrafted datapacks made with love ❤
 [`Name-Tag`](https://github.com/jodeks-datapacks/Name-Tag)
 [`Cutter`](https://github.com/jodeks-datapacks/Cutter)
 [`Craft-Music-Discs`](https://github.com/jodeks-datapacks/Craft-Music-Discs)
-## items
+## Items
 [`Bigger-Stack-Size`](https://github.com/jodeks-datapacks/Bigger-Stack-Size)
 ## Tools
 [`Mineable-Spawner`](https://github.com/jodeks-datapacks/Mineable-Spawner)
