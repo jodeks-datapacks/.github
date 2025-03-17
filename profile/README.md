@@ -16,6 +16,7 @@ Handcrafted datapacks made with love ❤
 [`Invisible-Player-Name`](https://github.com/jodeks-datapacks/Invisible-Player-Name)
 [`Mineable-Reinforced-Deepslate`](https://github.com/jodeks-datapacks/Mineable-Reinforced-Deepslate)
 [`No-Build-Limit`](https://github.com/jodeks-datapacks/No-Build-Limit)
+[`No-Creeper-Grief`](https://github.com/jodeks-datapacks/No-Creeper-Grief)
 [`No-Enderdragon-Grief`](https://github.com/jodeks-datapacks/No-Enderdragon-Grief)
 [`No-Enderman-Grief`](https://github.com/jodeks-datapacks/No-Enderman-Grief)
 [`No-Ghast-Grief`](https://github.com/jodeks-datapacks/No-Ghast-Grief)
