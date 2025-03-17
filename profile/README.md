@@ -59,7 +59,11 @@ Handcrafted datapacks made with love ❤
 ## Loot
 [`Mob-Heads`](https://github.com/jodeks-datapacks/Mob-Heads)
 [`Player-Drops-Head`](https://github.com/jodeks-datapacks/Player-Drops-Head)
+[`Shulker-Drops-Two-Shells`](https://github.com/jodeks-datapacks/Shulker-Drops-Two-Shells)
 ## Enchanting
 [`Too-Expensive-Removed`](https://github.com/jodeks-datapacks/Too-Expensive-Removed)
 ## Trading
 [`Villagers-Buy-Ender-Pearls`](https://github.com/jodeks-datapacks/Villagers-Buy-Ender-Pearls)
+
+
+> Can't find what you are seraching for? [Open an issue](https://github.com/jodeks-datapacks/.github/issues/new?template=category.yml) so that we can change the categories.
