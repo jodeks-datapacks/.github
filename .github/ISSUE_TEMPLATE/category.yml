@@ -11,7 +11,7 @@ body:
     id: change
     attributes:
       label: 'Type of change'
-      description: 'URL of the Repository/Datapack.'
+      description: 'What change do you want to make?'
       options:
         - 'Add the specified existing category to the Repository/Datapack'
         - 'Remove the specified existing category from the Repository/Datapack'
