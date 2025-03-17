@@ -11,6 +11,7 @@
   "blacklist": [
     ".github",
     "Template",
-    "default"
+    "default",
+    "demo-repository"
   ]
 }
