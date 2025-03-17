@@ -29,13 +29,13 @@ Handcrafted datapacks made with love ❤
 [`Transfer-Pet-Owner`](https://github.com/jodeks-datapacks/Transfer-Pet-Owner)
 [`Call-Your-Cat`](https://github.com/jodeks-datapacks/Call-Your-Cat)
 [`Call-Your-Parrot`](https://github.com/jodeks-datapacks/Call-Your-Parrot)
-## crafting
+## Crafting
 [`Craft-Spawn-Eggs`](https://github.com/jodeks-datapacks/Craft-Spawn-Eggs)
 [`Craft-Saddle`](https://github.com/jodeks-datapacks/Craft-Saddle)
 [`Name-Tag`](https://github.com/jodeks-datapacks/Name-Tag)
 [`Cutter`](https://github.com/jodeks-datapacks/Cutter)
 [`Craft-Music-Discs`](https://github.com/jodeks-datapacks/Craft-Music-Discs)
-## trading
+## Trading
 [`Villagers-Buy-Ender-Pearls`](https://github.com/jodeks-datapacks/Villagers-Buy-Ender-Pearls)
-## tools
+## Tools
 [`Too-Expensive-Removed`](https://github.com/jodeks-datapacks/Too-Expensive-Removed)
