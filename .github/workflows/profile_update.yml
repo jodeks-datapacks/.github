@@ -33,7 +33,7 @@ jobs:
         id: repos
         run: |
           organization="${{ github.repository_owner }}"
-          base_url="https://api.github.com/orgs/$organization/repos?type=public&per_page=100"
+          base_url="https://api.github.com/orgs/$organization/repos?type=public&per_page=100&sort=full_name"
           
           # Read the config file
           config=$(cat "$PATH_PROFILE_CONFIG")
