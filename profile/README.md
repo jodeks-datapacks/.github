@@ -52,8 +52,11 @@ Handcrafted datapacks made with love ❤
 [`Cutter`](https://github.com/jodeks-datapacks/Cutter)
 [`Name-Tag`](https://github.com/jodeks-datapacks/Name-Tag)
 ## Tools
+[`Enhanced-Hoes`](https://github.com/jodeks-datapacks/Enhanced-Hoes)
 [`Mine-Glass-Without-Silk-Touch`](https://github.com/jodeks-datapacks/Mine-Glass-Without-Silk-Touch)
 [`Mineable-Spawner`](https://github.com/jodeks-datapacks/Mineable-Spawner)
+[`Too-Expensive-Removed`](https://github.com/jodeks-datapacks/Too-Expensive-Removed)
+## Enchanting
 [`Too-Expensive-Removed`](https://github.com/jodeks-datapacks/Too-Expensive-Removed)
 ## Trading
 [`Villagers-Buy-Ender-Pearls`](https://github.com/jodeks-datapacks/Villagers-Buy-Ender-Pearls)
