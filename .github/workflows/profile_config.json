@@ -6,7 +6,8 @@
     "crafting": "Crafting",
     "trading": "Trading",
     "tools": "Tools",
-    "items": "Items"
+    "items": "Items",
+    "enchanting": "Enchanting"
   },
   "blacklist": [
     ".github",
