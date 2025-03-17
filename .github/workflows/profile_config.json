@@ -7,7 +7,8 @@
     "trading": "Trading",
     "tools": "Tools",
     "items": "Items",
-    "enchanting": "Enchanting"
+    "enchanting": "Enchanting",
+    "loot": "Loot"
   },
   "blacklist": [
     ".github",
