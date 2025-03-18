@@ -1,3 +1,2 @@
 ## ${category_name}
-${repositories}
-  
+${repositories}  
