@@ -4,7 +4,7 @@
 
 Handcrafted datapacks made with love ❤
 
-> [All Datapacks](https://github.com/orgs/jodeks-datapacks/repositories)
+> [All Datapacks](https://github.com/orgs/jodeks-datapacks/repositories#repos-list-filter-input)
 
 <!--
 [`Template`](https://github.com/jodeks-datapacks/Template)
