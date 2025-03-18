@@ -25,6 +25,7 @@ Handcrafted datapacks made with love ❤
 [`Show-Dimension-In-Name`](https://github.com/jodeks-datapacks/Show-Dimension-In-Name)
 [`Sleep`](https://github.com/jodeks-datapacks/Sleep)
 
+
 </br>
 ## Entities
 [`Armadillo-Drops-Scute`](https://github.com/jodeks-datapacks/Armadillo-Drops-Scute)
@@ -44,9 +45,11 @@ Handcrafted datapacks made with love ❤
 [`Transfer-Pet-Owner`](https://github.com/jodeks-datapacks/Transfer-Pet-Owner)
 [`Useful-Name-Tags`](https://github.com/jodeks-datapacks/Useful-Name-Tags)
 
+
 </br>
 ## Items
 [`Bigger-Stack-Size`](https://github.com/jodeks-datapacks/Bigger-Stack-Size)
+
 
 </br>
 ## Crafting
@@ -58,6 +61,7 @@ Handcrafted datapacks made with love ❤
 [`Cutter`](https://github.com/jodeks-datapacks/Cutter)
 [`Name-Tag`](https://github.com/jodeks-datapacks/Name-Tag)
 
+
 </br>
 ## Tools
 [`Enhanced-Hoes`](https://github.com/jodeks-datapacks/Enhanced-Hoes)
@@ -65,19 +69,23 @@ Handcrafted datapacks made with love ❤
 [`Mineable-Spawner`](https://github.com/jodeks-datapacks/Mineable-Spawner)
 [`Too-Expensive-Removed`](https://github.com/jodeks-datapacks/Too-Expensive-Removed)
 
+
 </br>
 ## Loot
 [`Mob-Heads`](https://github.com/jodeks-datapacks/Mob-Heads)
 [`Player-Drops-Head`](https://github.com/jodeks-datapacks/Player-Drops-Head)
 [`Shulker-Drops-Two-Shells`](https://github.com/jodeks-datapacks/Shulker-Drops-Two-Shells)
 
+
 </br>
 ## Enchanting
 [`Too-Expensive-Removed`](https://github.com/jodeks-datapacks/Too-Expensive-Removed)
 
+
 </br>
 ## Trading
 [`Villagers-Buy-Ender-Pearls`](https://github.com/jodeks-datapacks/Villagers-Buy-Ender-Pearls)
+
 
 </br>
 
