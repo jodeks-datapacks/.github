@@ -62,6 +62,7 @@ Handcrafted datapacks made with love ❤
 [`Craft-Spawner`](https://github.com/jodeks-datapacks/Craft-Spawner)
 [`Cutter`](https://github.com/jodeks-datapacks/Cutter)
 [`Name-Tag`](https://github.com/jodeks-datapacks/Name-Tag)
+[`Name-Tag`](https://github.com/jodeks-datapacks/Craft-Trial-Spawner-Keys)
   
 ## Tools
 [`Enhanced-Hoes`](https://github.com/jodeks-datapacks/Enhanced-Hoes)
