@@ -42,6 +42,7 @@ Handcrafted datapacks made with love ❤
 [`Mob-Heads`](https://github.com/jodeks-datapacks/Mob-Heads)
 [`No-Burning-Armor-Stands`](https://github.com/jodeks-datapacks/No-Burning-Armor-Stands)
 [`Player-Drops-Head`](https://github.com/jodeks-datapacks/Player-Drops-Head)
+[`Riding`](https://github.com/jodeks-datapacks/Riding)
 [`Shulker-Drops-Two-Shells`](https://github.com/jodeks-datapacks/Shulker-Drops-Two-Shells)
 [`Transfer-Pet-Owner`](https://github.com/jodeks-datapacks/Transfer-Pet-Owner)
 [`Useful-Name-Tags`](https://github.com/jodeks-datapacks/Useful-Name-Tags)
@@ -61,6 +62,7 @@ Handcrafted datapacks made with love ❤
 [`Craft-Saddle`](https://github.com/jodeks-datapacks/Craft-Saddle)
 [`Craft-Spawn-Eggs`](https://github.com/jodeks-datapacks/Craft-Spawn-Eggs)
 [`Craft-Spawner`](https://github.com/jodeks-datapacks/Craft-Spawner)
+[`Craft-Trial-Spawner-Keys`](https://github.com/jodeks-datapacks/Craft-Trial-Spawner-Keys)
 [`Cutter`](https://github.com/jodeks-datapacks/Cutter)
 [`Name-Tag`](https://github.com/jodeks-datapacks/Name-Tag)
   
