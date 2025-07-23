@@ -11,6 +11,13 @@ Handcrafted datapacks made with love ❤
 [`default`](https://github.com/jodeks-datapacks/default)
 -->
 
+## Environment
+[`AFK-Announcer`](https://github.com/jodeks-datapacks/AFK-Announcer)
+  
+## Entities
+[`Armadillo-Drops-Scute`](https://github.com/jodeks-datapacks/Armadillo-Drops-Scute)
+[`Armor-Stand-Arms`](https://github.com/jodeks-datapacks/Armor-Stand-Arms)
+  
 
 
 ---
