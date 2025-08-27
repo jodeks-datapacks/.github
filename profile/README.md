@@ -24,9 +24,6 @@ Handcrafted datapacks made with love ❤
 [`No-Enderman-Grief`](https://github.com/jodeks-datapacks/No-Enderman-Grief)
 [`No-Ghast-Grief`](https://github.com/jodeks-datapacks/No-Ghast-Grief)
 [`No-Spawn-Chunk-Forceload`](https://github.com/jodeks-datapacks/No-Spawn-Chunk-Forceload)
-[`Show-Biome-In-Name`](https://github.com/jodeks-datapacks/Show-Biome-In-Name)
-[`Show-Dimension-In-Name`](https://github.com/jodeks-datapacks/Show-Dimension-In-Name)
-[`Sleep`](https://github.com/jodeks-datapacks/Sleep)
   
 ## Entities
 [`Armadillo-Drops-Scute`](https://github.com/jodeks-datapacks/Armadillo-Drops-Scute)
@@ -45,15 +42,11 @@ Handcrafted datapacks made with love ❤
 [`No-Burning-Armor-Stands`](https://github.com/jodeks-datapacks/No-Burning-Armor-Stands)
 [`Player-Drops-Head`](https://github.com/jodeks-datapacks/Player-Drops-Head)
 [`Riding`](https://github.com/jodeks-datapacks/Riding)
-[`Shulker-Drops-Two-Shells`](https://github.com/jodeks-datapacks/Shulker-Drops-Two-Shells)
-[`Transfer-Pet-Owner`](https://github.com/jodeks-datapacks/Transfer-Pet-Owner)
-[`Useful-Name-Tags`](https://github.com/jodeks-datapacks/Useful-Name-Tags)
   
 ## Loot
 [`Bat-Membrane`](https://github.com/jodeks-datapacks/Bat-Membrane)
 [`Mob-Heads`](https://github.com/jodeks-datapacks/Mob-Heads)
 [`Player-Drops-Head`](https://github.com/jodeks-datapacks/Player-Drops-Head)
-[`Shulker-Drops-Two-Shells`](https://github.com/jodeks-datapacks/Shulker-Drops-Two-Shells)
   
 ## Items
 [`Bigger-Stack-Size`](https://github.com/jodeks-datapacks/Bigger-Stack-Size)
@@ -73,13 +66,6 @@ Handcrafted datapacks made with love ❤
 [`Locator-Bar-Removed`](https://github.com/jodeks-datapacks/Locator-Bar-Removed)
 [`Mine-Glass-Without-Silk-Touch`](https://github.com/jodeks-datapacks/Mine-Glass-Without-Silk-Touch)
 [`Mineable-Spawner`](https://github.com/jodeks-datapacks/Mineable-Spawner)
-[`Too-Expensive-Removed`](https://github.com/jodeks-datapacks/Too-Expensive-Removed)
-  
-## Enchanting
-[`Too-Expensive-Removed`](https://github.com/jodeks-datapacks/Too-Expensive-Removed)
-  
-## Trading
-[`Villagers-Buy-Ender-Pearls`](https://github.com/jodeks-datapacks/Villagers-Buy-Ender-Pearls)
   
 
 
