@@ -13,19 +13,6 @@ Handcrafted datapacks made with love ❤
 
 ## Environment
 [`AFK-Announcer`](https://github.com/jodeks-datapacks/AFK-Announcer)
-[`Easy-Sit`](https://github.com/jodeks-datapacks/Easy-Sit)
-[`Enhanced-Hoes`](https://github.com/jodeks-datapacks/Enhanced-Hoes)
-[`Invisible-Player-Name`](https://github.com/jodeks-datapacks/Invisible-Player-Name)
-[`Mineable-Reinforced-Deepslate`](https://github.com/jodeks-datapacks/Mineable-Reinforced-Deepslate)
-[`Mineable-Trial-Spawner`](https://github.com/jodeks-datapacks/Mineable-Trial-Spawner)
-[`No-Build-Limit`](https://github.com/jodeks-datapacks/No-Build-Limit)
-[`No-Creeper-Grief`](https://github.com/jodeks-datapacks/No-Creeper-Grief)
-[`No-Enderdragon-Grief`](https://github.com/jodeks-datapacks/No-Enderdragon-Grief)
-[`No-Enderman-Grief`](https://github.com/jodeks-datapacks/No-Enderman-Grief)
-[`No-Ghast-Grief`](https://github.com/jodeks-datapacks/No-Ghast-Grief)
-[`No-Spawn-Chunk-Forceload`](https://github.com/jodeks-datapacks/No-Spawn-Chunk-Forceload)
-[`Show-Biome-In-Name`](https://github.com/jodeks-datapacks/Show-Biome-In-Name)
-[`Show-Dimension-In-Name`](https://github.com/jodeks-datapacks/Show-Dimension-In-Name)
   
 ## Entities
 [`Armadillo-Drops-Scute`](https://github.com/jodeks-datapacks/Armadillo-Drops-Scute)
@@ -37,37 +24,12 @@ Handcrafted datapacks made with love ❤
 [`Call-Your-Happy-Ghast`](https://github.com/jodeks-datapacks/Call-Your-Happy-Ghast)
 [`Call-Your-Horse`](https://github.com/jodeks-datapacks/Call-Your-Horse)
 [`Call-Your-Parrot`](https://github.com/jodeks-datapacks/Call-Your-Parrot)
-[`Custom-Breed-Cooldown`](https://github.com/jodeks-datapacks/Custom-Breed-Cooldown)
-[`Immortal-Armadillo`](https://github.com/jodeks-datapacks/Immortal-Armadillo)
-[`Killer-Bunny-Name-Tag`](https://github.com/jodeks-datapacks/Killer-Bunny-Name-Tag)
-[`Mob-Heads`](https://github.com/jodeks-datapacks/Mob-Heads)
-[`No-Burning-Armor-Stands`](https://github.com/jodeks-datapacks/No-Burning-Armor-Stands)
-[`Player-Drops-Head`](https://github.com/jodeks-datapacks/Player-Drops-Head)
-[`Riding`](https://github.com/jodeks-datapacks/Riding)
   
 ## Loot
 [`Bat-Membrane`](https://github.com/jodeks-datapacks/Bat-Membrane)
-[`Mob-Heads`](https://github.com/jodeks-datapacks/Mob-Heads)
-[`Player-Drops-Head`](https://github.com/jodeks-datapacks/Player-Drops-Head)
   
 ## Items
 [`Bigger-Stack-Size`](https://github.com/jodeks-datapacks/Bigger-Stack-Size)
-  
-## Crafting
-[`Craft-Enchanted-Golden-Apple`](https://github.com/jodeks-datapacks/Craft-Enchanted-Golden-Apple)
-[`Craft-Music-Discs`](https://github.com/jodeks-datapacks/Craft-Music-Discs)
-[`Craft-Saddle`](https://github.com/jodeks-datapacks/Craft-Saddle)
-[`Craft-Spawn-Eggs`](https://github.com/jodeks-datapacks/Craft-Spawn-Eggs)
-[`Craft-Spawner`](https://github.com/jodeks-datapacks/Craft-Spawner)
-[`Craft-Trial-Spawner-Keys`](https://github.com/jodeks-datapacks/Craft-Trial-Spawner-Keys)
-[`Cutter`](https://github.com/jodeks-datapacks/Cutter)
-[`Name-Tag`](https://github.com/jodeks-datapacks/Name-Tag)
-  
-## Tools
-[`Enhanced-Hoes`](https://github.com/jodeks-datapacks/Enhanced-Hoes)
-[`Locator-Bar-Removed`](https://github.com/jodeks-datapacks/Locator-Bar-Removed)
-[`Mine-Glass-Without-Silk-Touch`](https://github.com/jodeks-datapacks/Mine-Glass-Without-Silk-Touch)
-[`Mineable-Spawner`](https://github.com/jodeks-datapacks/Mineable-Spawner)
   
 
 
