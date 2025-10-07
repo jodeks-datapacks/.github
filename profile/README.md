@@ -78,6 +78,9 @@ Handcrafted datapacks made with love ❤
 ## Enchanting
 [`Too-Expensive-Removed`](https://github.com/jodeks-datapacks/Too-Expensive-Removed)
   
+## Trading
+[`Villagers-Buy-Ender-Pearls`](https://github.com/jodeks-datapacks/Villagers-Buy-Ender-Pearls)
+  
 
 
 ---
