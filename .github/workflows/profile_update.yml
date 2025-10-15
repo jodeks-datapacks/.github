@@ -53,7 +53,8 @@ jobs:
               # Header und Body trennen
               headers=$(echo "$response" | sed '/^\r$/q')  # Alles bis zur ersten Leerzeile sind die Header
               body=$(echo "$response" | sed '1,/^\r$/d')   # Alles danach ist der Body
-              
+
+              echo "$body"
               # Repository-Namen extrahieren und anhängen
               repository_names+=$(echo "$body" | jq -r '.[].name' | tr '\n' ' ')
               
