@@ -2,7 +2,7 @@
 
 # jodeks datapacks
 
-Handcrafted datapacks made with love ❤
+Vanilla friendly & feature rich datapacks
 
 > [Search all Datapacks](https://github.com/orgs/jodeks-datapacks/repositories#repos-list-filter-input)
 
