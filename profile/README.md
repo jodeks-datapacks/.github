@@ -46,6 +46,7 @@ Handcrafted datapacks made with love ❤
 [`Player-Drops-Head`](https://github.com/jodeks-datapacks/Player-Drops-Head)
 [`Riding`](https://github.com/jodeks-datapacks/Riding)
 [`Shulker-Drops-Two-Shells`](https://github.com/jodeks-datapacks/Shulker-Drops-Two-Shells)
+[`Transfer-Pet-Owner`](https://github.com/jodeks-datapacks/Transfer-Pet-Owner)
 [`Useful-Name-Tags`](https://github.com/jodeks-datapacks/Useful-Name-Tags)
   
 ## Loot
