@@ -3,36 +3,3 @@
 # jodeks datapacks
 
 Handcrafted datapacks made with love ❤
-
-> [Search all Datapacks](https://github.com/orgs/jodeks-datapacks/repositories#repos-list-filter-input)
-
-<!--
-[`Template`](https://github.com/jodeks-datapacks/Template)
-[`default`](https://github.com/jodeks-datapacks/default)
--->
-
-## Environment
-[`AFK-Announcer`](https://github.com/jodeks-datapacks/AFK-Announcer)
-  
-## Entities
-[`Armadillo-Drops-Scute`](https://github.com/jodeks-datapacks/Armadillo-Drops-Scute)
-[`Armor-Stand-Arms`](https://github.com/jodeks-datapacks/Armor-Stand-Arms)
-[`Bat-Membrane`](https://github.com/jodeks-datapacks/Bat-Membrane)
-[`Bouncy-Slimes`](https://github.com/jodeks-datapacks/Bouncy-Slimes)
-[`Call-Your-Cat`](https://github.com/jodeks-datapacks/Call-Your-Cat)
-[`Call-Your-Dog`](https://github.com/jodeks-datapacks/Call-Your-Dog)
-[`Call-Your-Happy-Ghast`](https://github.com/jodeks-datapacks/Call-Your-Happy-Ghast)
-[`Call-Your-Horse`](https://github.com/jodeks-datapacks/Call-Your-Horse)
-[`Call-Your-Parrot`](https://github.com/jodeks-datapacks/Call-Your-Parrot)
-  
-## Loot
-[`Bat-Membrane`](https://github.com/jodeks-datapacks/Bat-Membrane)
-  
-## Items
-[`Bigger-Stack-Size`](https://github.com/jodeks-datapacks/Bigger-Stack-Size)
-  
-
-
----
-
-#### Can't find what you are seraching for? [Open an issue](https://github.com/jodeks-datapacks/.github/issues/new?template=category.yml) so that we can change the categories.
