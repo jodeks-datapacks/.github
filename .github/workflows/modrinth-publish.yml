@@ -1,0 +1,45 @@
+name: Publish Datapack to Modrinth
+
+on:
+  workflow_call:
+    secrets:
+      MODRINTH_TOKEN:
+        required: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Read modrinth.json
+        id: meta
+        run: |
+          echo "project_id=$(jq -r '.project_id' modrinth.json)" >> $GITHUB_OUTPUT
+          echo "loaders=$(jq -c '.loaders' modrinth.json)" >> $GITHUB_OUTPUT
+          echo "game_versions=$(jq -c '.game_versions' modrinth.json)" >> $GITHUB_OUTPUT
+          echo "dependencies=$(jq -r '.dependencies // ""' modrinth.json)" >> $GITHUB_OUTPUT
+          echo "version_type=$(jq -r '.version_type // "release"' modrinth.json)" >> $GITHUB_OUTPUT
+            
+      - name: Zip datapack
+        run: |
+          zip -r "${{ github.event.repository.name }}-${{ github.event.release.tag_name }}.zip" . \
+            -x ".git/*" \
+            -x ".github/*" \
+            -x "modrinth.json" \
+      
+      - name: Publish to Modrinth
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: ${{ steps.meta.outputs.project_id }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          
+          files: "*.zip"
+          name: ${{ github.event.repository.name }} ${{ github.event.release.tag_name }}
+          version: ${{ github.event.release.tag_name }}
+          version-type: ${{ steps.meta.outputs.version_type }}
+          changelog: ${{ github.event.release.body }}
+          
+          loaders: ${{ steps.meta.outputs.loaders }}
+          game-versions: ${{ fromJson(steps.meta.outputs.game_versions) }}
+          dependencies: ${{ steps.meta.outputs.dependencies }}
