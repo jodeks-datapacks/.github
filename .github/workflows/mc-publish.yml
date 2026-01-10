@@ -86,7 +86,7 @@ jobs:
               "title": "${NAME} ${VERSION}",
               "description": "A new version has been released!",
               "url": "https://modrinth.com/datapack/${PROJECT_ID}/version/${VERSION}",
-              "color": 2293637,
+              "color": 1825130,
               "fields": [
                 {
                   "name": "Changelog",
