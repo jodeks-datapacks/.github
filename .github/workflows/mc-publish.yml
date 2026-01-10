@@ -111,7 +111,7 @@ jobs:
               },
               "timestamp": "${TIMESTAMP}"
             }]
-    }
-    EOF
-    )
-    curl -H "Content-Type: application/json" -d "$PAYLOAD" "$DISCORD_WEBHOOK_URL"
+          }
+          EOF
+          )
+          curl -H "Content-Type: application/json" -d "$PAYLOAD" "$DISCORD_WEBHOOK_URL"
