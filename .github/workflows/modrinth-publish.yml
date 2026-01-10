@@ -1,11 +1,9 @@
 name: Publish Datapack to Modrinth
-
 on:
   workflow_call:
     secrets:
       MODRINTH_TOKEN:
         required: true
-
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -16,8 +14,10 @@ jobs:
         id: meta
         run: |
           echo "project_id=$(jq -r '.project_id' modrinth.json)" >> $GITHUB_OUTPUT
-          echo "loaders=$(jq -c '.loaders' modrinth.json)" >> $GITHUB_OUTPUT
-          echo "game_versions=$(jq -c '.game_versions' modrinth.json)" >> $GITHUB_OUTPUT
+          echo "loaders=$(jq -r '.loaders | join("\n")' modrinth.json)" >> $GITHUB_OUTPUT
+          echo 'game_versions<<EOF' >> $GITHUB_OUTPUT
+          jq -r '.game_versions[]' modrinth.json >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
           echo "dependencies=$(jq -r '.dependencies // ""' modrinth.json)" >> $GITHUB_OUTPUT
           echo "version_type=$(jq -r '.version_type // "release"' modrinth.json)" >> $GITHUB_OUTPUT
             
@@ -26,7 +26,7 @@ jobs:
           zip -r "${{ github.event.repository.name }}-${{ github.event.release.tag_name }}.zip" . \
             -x ".git/*" \
             -x ".github/*" \
-            -x "modrinth.json" \
+            -x "modrinth.json"
       
       - name: Publish to Modrinth
         uses: Kir-Antipov/mc-publish@v3.3
@@ -41,5 +41,5 @@ jobs:
           changelog: ${{ github.event.release.body }}
           
           loaders: ${{ steps.meta.outputs.loaders }}
-          game-versions: ${{ fromJson(steps.meta.outputs.game_versions) }}
+          game-versions: ${{ steps.meta.outputs.game_versions }}
           dependencies: ${{ steps.meta.outputs.dependencies }}
