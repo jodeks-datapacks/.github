@@ -82,24 +82,24 @@ jobs:
           {
             "content": "<@&${ROLE_ID}>",
             "embeds": [{
-              "title": "📦 ${NAME} ${VERSION}",
+              "title": "${NAME} ${VERSION}",
               "description": "A new version has been released!",
               "url": "https://modrinth.com/datapack/${PROJECT_ID}/version/${VERSION}",
               "color": 2293637,
               "fields": [
                 {
-                  "name": "📋 Changelog",
+                  "name": "Changelog",
                   "value": "${CHANGELOG}",
                   "inline": false
                 },
                 {
-                  "name": "🎮 Minecraft Versions",
+                  "name": "Minecraft Versions",
                   "value": "\`${MC_VERSIONS}\`",
                   "inline": false
                 },
                 {
-                  "name": "⬇️ Downloads",
-                  "value": "[Modrinth](https://modrinth.com/datapack/${PROJECT_ID}/version/${VERSION}) • [CurseForge](https://www.curseforge.com/projects/${CF_PROJECT_ID})",
+                  "name": "Downloads",
+                  "value": "[Modrinth](https://modrinth.com/datapack/${PROJECT_ID}/version/${VERSION}) • [CurseForge](https://www.curseforge.com/#/projects/${CF_PROJECT_ID})",
                   "inline": false
                 }
               ],
