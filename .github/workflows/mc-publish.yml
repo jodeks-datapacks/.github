@@ -19,7 +19,6 @@ jobs:
         run: |
           echo "project_id=$(jq -r '.project_id' publish.json)" >> $GITHUB_OUTPUT
           echo "curseforge_project_id=$(jq -r '.curseforge_project_id // ""' publish.json)" >> $GITHUB_OUTPUT
-          echo "curseforge_slug=$(jq -r '.curseforge_slug // ""' publish.json)" >> $GITHUB_OUTPUT
           echo "loaders=$(jq -r '.loaders | join("\n")' publish.json)" >> $GITHUB_OUTPUT
           echo 'game_versions<<EOF' >> $GITHUB_OUTPUT
           jq -r '.game_versions[]' publish.json >> $GITHUB_OUTPUT
@@ -65,7 +64,7 @@ jobs:
           VERSION="${{ github.event.release.tag_name }}"
           NAME="${{ github.event.repository.name }}"
           PROJECT_ID="${{ steps.meta.outputs.project_id }}"
-          CF_SLUG="${{ steps.meta.outputs.curseforge_slug }}"
+          CF_PROJECT_ID="${{ steps.meta.outputs.curseforge_project_id }}"
           MC_VERSIONS_RAW=$(echo "${{ steps.meta.outputs.game_versions }}" | sort -V)
           MC_FIRST=$(echo "$MC_VERSIONS_RAW" | head -n1)
           MC_LAST=$(echo "$MC_VERSIONS_RAW" | tail -n1)
@@ -100,7 +99,7 @@ jobs:
                 },
                 {
                   "name": "⬇️ Downloads",
-                  "value": "[Modrinth](https://modrinth.com/datapack/${PROJECT_ID}/version/${VERSION}) • [CurseForge](https://www.curseforge.com/minecraft/data-packs/${CF_SLUG})",
+                  "value": "[Modrinth](https://modrinth.com/datapack/${PROJECT_ID}/version/${VERSION}) • [CurseForge](https://www.curseforge.com/projects/${CF_PROJECT_ID})",
                   "inline": false
                 }
               ],
