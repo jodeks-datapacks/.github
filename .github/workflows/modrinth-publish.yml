@@ -6,7 +6,6 @@ on:
         required: true
       DISCORD_WEBHOOK_URL:
         required: true
-
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -23,6 +22,7 @@ jobs:
           echo 'EOF' >> $GITHUB_OUTPUT
           echo "dependencies=$(jq -r '.dependencies // ""' modrinth.json)" >> $GITHUB_OUTPUT
           echo "version_type=$(jq -r '.version_type // "release"' modrinth.json)" >> $GITHUB_OUTPUT
+          echo "discord_role_id=$(jq -r '.discord_role_id // ""' modrinth.json)" >> $GITHUB_OUTPUT
           
       - name: Zip datapack
         run: |
@@ -45,6 +45,12 @@ jobs:
           game-versions: ${{ steps.meta.outputs.game_versions }}
           dependencies: ${{ steps.meta.outputs.dependencies }}
       
+      - name: Get project icon
+        id: icon
+        run: |
+          ICON_URL=$(curl -s "https://api.modrinth.com/v2/project/${{ steps.meta.outputs.project_id }}" | jq -r '.icon_url // ""')
+          echo "url=${ICON_URL}" >> $GITHUB_OUTPUT
+      
       - name: Notify Discord
         if: success()
         env:
@@ -54,41 +60,45 @@ jobs:
           NAME="${{ github.event.repository.name }}"
           PROJECT_ID="${{ steps.meta.outputs.project_id }}"
           MC_VERSIONS=$(echo "${{ steps.meta.outputs.game_versions }}" | tr '\n' ', ' | sed 's/, $//')
-          RELEASE_DATE=$(date -u +"%Y-%m-%d %H:%M UTC")
-          CHANGELOG=$(echo "${{ github.event.release.body }}" | jq -Rs .)
+          CHANGELOG=$(echo "${{ github.event.release.body }}" | jq -Rs . | sed 's/^"//;s/"$//')
           ROLE_ID="${{ steps.meta.outputs.discord_role_id }}"
+          ICON_URL="${{ steps.icon.outputs.url }}"
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          
           PAYLOAD=$(cat <<EOF
           {
-            "content": "<@&${ROLE_ID}> **${NAME} ${VERSION}** has just been released!",
+            "content": "<@&${ROLE_ID}>",
             "embeds": [{
-              "title": "${NAME} ${VERSION}",
-              "url": "https://modrinth.com/datapack/${PROJECT_ID}",
-              "color": 2303781,
+              "title": "📦 ${NAME} ${VERSION}",
+              "description": "A new version has been released on Modrinth!",
+              "url": "https://modrinth.com/datapack/${PROJECT_ID}/version/${VERSION}",
+              "color": 2293637,
               "fields": [
                 {
-                  "name": "Minecraft Versions",
-                  "value": "${MC_VERSIONS}",
-                  "inline": true
-                },
-                {
-                  "name": "Release Date",
-                  "value": "${RELEASE_DATE}",
-                  "inline": true
-                },
-                {
                   "name": "Changelog",
-                  "value": ${CHANGELOG}
+                  "value": "${CHANGELOG}",
+                  "inline": false
+                },
+                {
+                  "name": "Minecraft Versions",
+                  "value": "\`${MC_VERSIONS}\`",
+                  "inline": true
+                },
+                {
+                  "name": "Download",
+                  "value": "[View on Modrinth](https://modrinth.com/datapack/${PROJECT_ID}/version/${VERSION})",
+                  "inline": true
                 }
               ],
-              "footer": {
-                "text": "Automatically published via GitHub Actions"
-              },
               "thumbnail": {
-                "url": "https://cdn.modrinth.com/data/${PROJECT_ID}/icon.png"
-              }
+                "url": "${ICON_URL}"
+              },
+              "footer": {
+                "text": "Modrinth Release"
+              },
+              "timestamp": "${TIMESTAMP}"
             }]
           }
           EOF
           )
           curl -H "Content-Type: application/json" -d "$PAYLOAD" "$DISCORD_WEBHOOK_URL"
-      
