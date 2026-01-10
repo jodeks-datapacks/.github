@@ -69,7 +69,7 @@ jobs:
           {
             "content": "<@&${ROLE_ID}>",
             "embeds": [{
-              "title": "📦 ${NAME} ${VERSION}",
+              "title": "${NAME} ${VERSION}",
               "description": "A new version has been released on Modrinth!",
               "url": "https://modrinth.com/datapack/${PROJECT_ID}/version/${VERSION}",
               "color": 2293637,
