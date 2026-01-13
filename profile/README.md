@@ -26,6 +26,7 @@ Handcrafted datapacks made with love ❤
 [`No-Spawn-Chunk-Forceload`](https://github.com/jodeks-datapacks/No-Spawn-Chunk-Forceload)
 [`Show-Biome-In-Name`](https://github.com/jodeks-datapacks/Show-Biome-In-Name)
 [`Show-Dimension-In-Name`](https://github.com/jodeks-datapacks/Show-Dimension-In-Name)
+[`Sleep`](https://github.com/jodeks-datapacks/Sleep)
   
 ## Entities
 [`Armadillo-Drops-Scute`](https://github.com/jodeks-datapacks/Armadillo-Drops-Scute)
