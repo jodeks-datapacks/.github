@@ -71,10 +71,6 @@ Handcrafted datapacks made with love ❤
 [`Locator-Bar-Removed`](https://github.com/jodeks-datapacks/Locator-Bar-Removed)
 [`Mine-Glass-Without-Silk-Touch`](https://github.com/jodeks-datapacks/Mine-Glass-Without-Silk-Touch)
 [`Mineable-Spawner`](https://github.com/jodeks-datapacks/Mineable-Spawner)
-[`Too-Expensive-Removed`](https://github.com/jodeks-datapacks/Too-Expensive-Removed)
-  
-## Enchanting
-[`Too-Expensive-Removed`](https://github.com/jodeks-datapacks/Too-Expensive-Removed)
   
 
 
