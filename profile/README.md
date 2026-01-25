@@ -46,8 +46,6 @@ Handcrafted datapacks made with love ❤
 [`Player-Drops-Head`](https://github.com/jodeks-datapacks/Player-Drops-Head)
 [`Riding`](https://github.com/jodeks-datapacks/Riding)
 [`Shulker-Drops-Two-Shells`](https://github.com/jodeks-datapacks/Shulker-Drops-Two-Shells)
-[`Transfer-Pet-Owner`](https://github.com/jodeks-datapacks/Transfer-Pet-Owner)
-[`Useful-Name-Tags`](https://github.com/jodeks-datapacks/Useful-Name-Tags)
   
 ## Loot
 [`Bat-Membrane`](https://github.com/jodeks-datapacks/Bat-Membrane)
@@ -73,13 +71,6 @@ Handcrafted datapacks made with love ❤
 [`Locator-Bar-Removed`](https://github.com/jodeks-datapacks/Locator-Bar-Removed)
 [`Mine-Glass-Without-Silk-Touch`](https://github.com/jodeks-datapacks/Mine-Glass-Without-Silk-Touch)
 [`Mineable-Spawner`](https://github.com/jodeks-datapacks/Mineable-Spawner)
-[`Too-Expensive-Removed`](https://github.com/jodeks-datapacks/Too-Expensive-Removed)
-  
-## Enchanting
-[`Too-Expensive-Removed`](https://github.com/jodeks-datapacks/Too-Expensive-Removed)
-  
-## Trading
-[`Villagers-Buy-Ender-Pearls`](https://github.com/jodeks-datapacks/Villagers-Buy-Ender-Pearls)
   
 
 
