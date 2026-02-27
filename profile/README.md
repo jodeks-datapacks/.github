@@ -18,14 +18,6 @@ Handcrafted datapacks made with love ❤
 [`Invisible-Player-Name`](https://github.com/jodeks-datapacks/Invisible-Player-Name)
 [`Mineable-Reinforced-Deepslate`](https://github.com/jodeks-datapacks/Mineable-Reinforced-Deepslate)
 [`Mineable-Trial-Spawner`](https://github.com/jodeks-datapacks/Mineable-Trial-Spawner)
-[`No-Build-Limit`](https://github.com/jodeks-datapacks/No-Build-Limit)
-[`No-Creeper-Grief`](https://github.com/jodeks-datapacks/No-Creeper-Grief)
-[`No-Enderdragon-Grief`](https://github.com/jodeks-datapacks/No-Enderdragon-Grief)
-[`No-Enderman-Grief`](https://github.com/jodeks-datapacks/No-Enderman-Grief)
-[`No-Ghast-Grief`](https://github.com/jodeks-datapacks/No-Ghast-Grief)
-[`No-Spawn-Chunk-Forceload`](https://github.com/jodeks-datapacks/No-Spawn-Chunk-Forceload)
-[`Show-Biome-In-Name`](https://github.com/jodeks-datapacks/Show-Biome-In-Name)
-[`Show-Dimension-In-Name`](https://github.com/jodeks-datapacks/Show-Dimension-In-Name)
   
 ## Entities
 [`Armadillo-Drops-Scute`](https://github.com/jodeks-datapacks/Armadillo-Drops-Scute)
@@ -41,14 +33,10 @@ Handcrafted datapacks made with love ❤
 [`Immortal-Armadillo`](https://github.com/jodeks-datapacks/Immortal-Armadillo)
 [`Killer-Bunny-Name-Tag`](https://github.com/jodeks-datapacks/Killer-Bunny-Name-Tag)
 [`Mob-Heads`](https://github.com/jodeks-datapacks/Mob-Heads)
-[`No-Burning-Armor-Stands`](https://github.com/jodeks-datapacks/No-Burning-Armor-Stands)
-[`Player-Drops-Head`](https://github.com/jodeks-datapacks/Player-Drops-Head)
-[`Riding`](https://github.com/jodeks-datapacks/Riding)
   
 ## Loot
 [`Bat-Membrane`](https://github.com/jodeks-datapacks/Bat-Membrane)
 [`Mob-Heads`](https://github.com/jodeks-datapacks/Mob-Heads)
-[`Player-Drops-Head`](https://github.com/jodeks-datapacks/Player-Drops-Head)
   
 ## Items
 [`Bigger-Stack-Size`](https://github.com/jodeks-datapacks/Bigger-Stack-Size)
@@ -61,7 +49,6 @@ Handcrafted datapacks made with love ❤
 [`Craft-Spawner`](https://github.com/jodeks-datapacks/Craft-Spawner)
 [`Craft-Trial-Spawner-Keys`](https://github.com/jodeks-datapacks/Craft-Trial-Spawner-Keys)
 [`Cutter`](https://github.com/jodeks-datapacks/Cutter)
-[`Name-Tag`](https://github.com/jodeks-datapacks/Name-Tag)
   
 ## Tools
 [`Enhanced-Hoes`](https://github.com/jodeks-datapacks/Enhanced-Hoes)
