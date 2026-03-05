@@ -116,3 +116,11 @@ jobs:
           EOF
           )
           curl -H "Content-Type: application/json" -d "$PAYLOAD" "$DISCORD_WEBHOOK_URL"
+
+      - name: Update Modrinth description from README
+        run: |
+          BODY=$(cat README.md | jq -Rs .)
+          curl -X PATCH "https://api.modrinth.com/v2/project/${{ steps.meta.outputs.project_id }}" \
+            -H "Authorization: ${{ secrets.MODRINTH_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"body\": ${BODY}}"
