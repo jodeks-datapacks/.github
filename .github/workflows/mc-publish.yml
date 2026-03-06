@@ -131,9 +131,9 @@ jobs:
           MOD_CF_ID=$(jq -r '.curseforge_mod_project_id // ""' publish.json)
           echo "curseforge_mod_project_id=${MOD_CF_ID}" >> $GITHUB_OUTPUT
 
-      - name: Wait for manual Modrinth JAR upload
+      - name: Wait for manual Modrinth JAR
         if: steps.mod_meta.outputs.curseforge_mod_project_id != ''
-        run: sleep 300
+        run: sleep 180
 
       - name: Fetch JAR from Modrinth and upload to CurseForge mod project
         if: steps.mod_meta.outputs.curseforge_mod_project_id != ''
@@ -147,7 +147,7 @@ jobs:
           # Search modrinth version by tag
           echo "Fetching Modrinth version for tag ${VERSION}..."
           VERSION_DATA=$(curl -sf "https://api.modrinth.com/v2/project/${PROJECT_ID}/version" \
-            | jq --arg v "$VERSION" '[.[] | select(.version_number == $v)] | first')
+            | jq --arg v "${VERSION}+mod" '[.[] | select(.version_number == $v)] | first')
 
           if [ -z "$VERSION_DATA" ] || [ "$VERSION_DATA" = "null" ]; then
             echo "Error: No Modrinth version found for tag ${VERSION}"
