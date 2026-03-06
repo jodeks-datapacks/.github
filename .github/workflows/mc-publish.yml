@@ -124,3 +124,96 @@ jobs:
             -H "Authorization: ${{ secrets.MODRINTH_TOKEN }}" \
             -H "Content-Type: application/json" \
             -d "{\"body\": ${BODY}}"
+
+      - name: Read mod project id
+        id: mod_meta
+        run: |
+          MOD_CF_ID=$(jq -r '.curseforge_mod_project_id // ""' publish.json)
+          echo "curseforge_mod_project_id=${MOD_CF_ID}" >> $GITHUB_OUTPUT
+
+      - name: Wait for manual Modrinth JAR upload
+        if: steps.mod_meta.outputs.curseforge_mod_project_id != ''
+        run: sleep 300
+
+      - name: Fetch JAR from Modrinth and upload to CurseForge mod project
+        if: steps.mod_meta.outputs.curseforge_mod_project_id != ''
+        env:
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+        run: |
+          VERSION="${{ github.event.release.tag_name }}"
+          PROJECT_ID="${{ steps.meta.outputs.project_id }}"
+          MOD_CF_ID="${{ steps.mod_meta.outputs.curseforge_mod_project_id }}"
+
+          # Search modrinth version by tag
+          echo "Fetching Modrinth version for tag ${VERSION}..."
+          VERSION_DATA=$(curl -sf "https://api.modrinth.com/v2/project/${PROJECT_ID}/version" \
+            | jq --arg v "$VERSION" '[.[] | select(.version_number == $v)] | first')
+
+          if [ -z "$VERSION_DATA" ] || [ "$VERSION_DATA" = "null" ]; then
+            echo "Error: No Modrinth version found for tag ${VERSION}"
+            exit 1
+          fi
+
+          # Search for JAR File
+          JAR_URL=$(echo "$VERSION_DATA" | jq -r '.files[] | select(.filename | endswith(".jar")) | .url' | head -n1)
+          JAR_NAME=$(echo "$VERSION_DATA" | jq -r '.files[] | select(.filename | endswith(".jar")) | .filename' | head -n1)
+
+          if [ -z "$JAR_URL" ] || [ "$JAR_URL" = "null" ]; then
+            echo "Error: No JAR file found in Modrinth version ${VERSION}"
+            exit 1
+          fi
+
+          echo "Downloading JAR: ${JAR_NAME}"
+          curl -L -o "${JAR_NAME}" "${JAR_URL}"
+
+          # Get Game versions + loaders from publish.json
+          MC_VERSIONS=$(jq -r '[.game_versions[]]' publish.json)
+          
+          # Get CurseForge game version IDs
+          echo "Fetching CurseForge game version IDs..."
+          CF_VERSIONS_RAW=$(curl -sf \
+            -H "x-api-key: ${CURSEFORGE_TOKEN}" \
+            "https://minecraft.curseforge.com/api/game/versions")
+          
+          CF_VERSION_IDS=$(echo "$MC_VERSIONS" | jq -r '.[]' | while read -r MC_VER; do
+            ID=$(echo "$CF_VERSIONS_RAW" | jq --arg v "$MC_VER" '.[] | select(.name == $v) | .id')
+            if [ -n "$ID" ]; then echo "$ID"; fi
+          done | jq -Rs '[split("\n")[] | select(. != "") | tonumber]')
+
+          # Map release type
+          VERSION_TYPE=$(jq -r '.version_type // "release"' publish.json)
+          case "$VERSION_TYPE" in
+            release) CF_RELEASE_TYPE="release" ;;
+            beta)    CF_RELEASE_TYPE="beta" ;;
+            alpha)   CF_RELEASE_TYPE="alpha" ;;
+            *)       CF_RELEASE_TYPE="release" ;;
+          esac
+
+          CHANGELOG="${{ github.event.release.body }}"
+
+          # Build metadata JSON
+          METADATA=$(jq -n \
+            --arg changelog "$CHANGELOG" \
+            --arg releaseType "$CF_RELEASE_TYPE" \
+            --argjson gameVersions "$CF_VERSION_IDS" \
+            '{
+              changelog: $changelog,
+              changelogType: "markdown",
+              releaseType: $releaseType,
+              gameVersions: $gameVersions
+            }')
+
+          echo "Uploading JAR to CurseForge mod project ${MOD_CF_ID}..."
+          RESPONSE=$(curl -sf \
+            -H "x-api-key: ${CURSEFORGE_TOKEN}" \
+            -F "metadata=${METADATA};type=application/json" \
+            -F "file=@${JAR_NAME}" \
+            "https://minecraft.curseforge.com/api/projects/${MOD_CF_ID}/upload-file")
+
+          echo "CurseForge response: ${RESPONSE}"
+          CF_FILE_ID=$(echo "$RESPONSE" | jq -r '.id // empty')
+          if [ -z "$CF_FILE_ID" ]; then
+            echo "Error: Upload failed"
+            exit 1
+          fi
+          echo "Successfully uploaded JAR to CurseForge, file ID: ${CF_FILE_ID}"
