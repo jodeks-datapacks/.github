@@ -183,7 +183,7 @@ jobs:
           echo "Fetching CurseForge game version IDs..."
           CF_VERSIONS_RAW=$(curl -sf \
             -H "x-api-key: ${CURSEFORGE_TOKEN}" \
-            "https://minecraft.curseforge.com/api/game/versions")
+            "https://minecraft.curseforge.com/api/game/versions?token=${CURSEFORGE_TOKEN}")
           
           CF_VERSION_IDS=$(echo "$MC_VERSIONS" | jq -r '.[]' | while read -r MC_VER; do
             ID=$(echo "$CF_VERSIONS_RAW" | jq --arg v "$MC_VER" '.[] | select(.name == $v) | .id')
