@@ -143,7 +143,7 @@ jobs:
 
       - name: Wait for manual Modrinth JAR
         if: steps.mod_meta.outputs.curseforge_mod_project_id != ''
-        run: sleep 180
+        run: sleep 60
 
       - name: Fetch JAR from Modrinth and upload to CurseForge mod project
         if: steps.mod_meta.outputs.curseforge_mod_project_id != ''
@@ -181,9 +181,10 @@ jobs:
           
           # Get CurseForge game version IDs
           echo "Fetching CurseForge game version IDs..."
-          CF_VERSIONS_RAW=$(curl -sf \
+          CF_VERSIONS_RAW=$(curl -s \
             -H "x-api-key: ${CURSEFORGE_TOKEN}" \
-            "https://minecraft.curseforge.com/api/game/versions?token=${CURSEFORGE_TOKEN}")
+            "https://minecraft.curseforge.com/api/game/versions")
+          echo "CF API response: ${CF_VERSIONS_RAW}"
           
           CF_VERSION_IDS=$(echo "$MC_VERSIONS" | jq -r '.[]' | while read -r MC_VER; do
             ID=$(echo "$CF_VERSIONS_RAW" | jq --arg v "$MC_VER" '.[] | select(.name == $v) | .id')
