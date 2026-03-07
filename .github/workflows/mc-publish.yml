@@ -56,9 +56,19 @@ jobs:
         run: |
           ICON_URL=$(curl -s "https://api.modrinth.com/v2/project/${{ steps.meta.outputs.project_id }}" | jq -r '.icon_url // ""')
           echo "url=${ICON_URL}" >> $GITHUB_OUTPUT
+
+      - name: Check for noping flag
+        id: ping_check
+        run: |
+          BODY="${{ github.event.release.body }}"
+          if echo "$BODY" | grep -qi '\[noping\]'; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
       
       - name: Notify Discord
-        if: success()
+        if: success() && steps.ping_check.outputs.skip == 'false'
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
@@ -74,7 +84,7 @@ jobs:
           else
             MC_VERSIONS="${MC_FIRST} - ${MC_LAST}"
           fi
-          CHANGELOG=$(echo "${{ github.event.release.body }}" | jq -Rs . | sed 's/^"//;s/"$//')
+          CHANGELOG=$(echo "${{ github.event.release.body }}" | sed 's/\[noping\]//gi' | sed '/^[[:space:]]*$/d' | jq -Rs . | sed 's/^"//;s/"$//')
           ROLE_ID="${{ steps.meta.outputs.discord_role_id }}"
           ICON_URL="${{ steps.icon.outputs.url }}"
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
