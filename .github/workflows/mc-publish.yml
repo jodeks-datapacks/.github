@@ -200,9 +200,19 @@ jobs:
           echo "$CF_VERSIONS_RAW" | jq --arg v "$MC_VER" '.[] | select(.name == $v)'
           
           CF_VERSION_IDS=$(echo "$MC_VERSIONS" | jq -r '.[]' | while read -r MC_VER; do
-            ID=$(echo "$CF_VERSIONS_RAW" | jq --arg v "$MC_VER" '.[] | select(.name == $v) | .id')
-            if [ -n "$ID" ]; then echo "$ID"; fi
+            ID=$(echo "$CF_VERSIONS_RAW" | jq --arg v "$MC_VER" '[.[] | select(.name == $v and .gameVersionTypeID == 77784)] | first | .id')
+            if [ -n "$ID" ] && [ "$ID" != "null" ]; then echo "$ID"; fi
           done | jq -Rs '[split("\n")[] | select(. != "") | tonumber]')
+
+          # Loader IDs aus CurseForge holen
+          LOADER_IDS=$(jq -r '.loaders[]' publish.json | while read -r LOADER; do
+            # CurseForge hat Loader-Namen wie "Fabric", "Forge" etc. als gameVersions
+            ID=$(echo "$CF_VERSIONS_RAW" | jq --arg l "$LOADER" '[.[] | select(.name == ($l | ascii_downcase) or (.name | ascii_downcase) == ($l | ascii_downcase))] | first | .id')
+            if [ -n "$ID" ] && [ "$ID" != "null" ]; then echo "$ID"; fi
+          done | jq -Rs '[split("\n")[] | select(. != "") | tonumber]')
+          
+          # Dann zusammenführen
+          ALL_VERSION_IDS=$(echo "$CF_VERSION_IDS $LOADER_IDS" | jq -s 'add')
 
           # Map release type
           VERSION_TYPE=$(jq -r '.version_type // "release"' publish.json)
@@ -228,11 +238,16 @@ jobs:
             }')
 
           echo "Uploading JAR to CurseForge mod project ${MOD_CF_ID}..."
-          RESPONSE=$(curl -sf \
+          RESPONSE=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
             -H "X-Api-Token: ${CURSEFORGE_TOKEN}" \
             -F "metadata=${METADATA};type=application/json" \
             -F "file=@${JAR_NAME}" \
             "https://minecraft.curseforge.com/api/projects/${MOD_CF_ID}/upload-file")
+          
+          HTTP_CODE=$(echo "$RESPONSE" | grep "HTTP_CODE:" | sed 's/HTTP_CODE://')
+          BODY=$(echo "$RESPONSE" | grep -v "HTTP_CODE:")
+          echo "HTTP Status: ${HTTP_CODE}"
+          echo "Response: ${BODY}"
 
           echo "CurseForge response: ${RESPONSE}"
           CF_FILE_ID=$(echo "$RESPONSE" | jq -r '.id // empty')
