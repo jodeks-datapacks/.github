@@ -182,9 +182,8 @@ jobs:
           # Get CurseForge game version IDs
           echo "Fetching CurseForge game version IDs..."
           CF_VERSIONS_RAW=$(curl -s \
-            -H "x-api-key: ${CURSEFORGE_TOKEN}" \
+            -H "X-Api-Token: ${CURSEFORGE_TOKEN}" \
             "https://minecraft.curseforge.com/api/game/versions")
-          echo "CF API response: ${CF_VERSIONS_RAW}"
           
           CF_VERSION_IDS=$(echo "$MC_VERSIONS" | jq -r '.[]' | while read -r MC_VER; do
             ID=$(echo "$CF_VERSIONS_RAW" | jq --arg v "$MC_VER" '.[] | select(.name == $v) | .id')
@@ -216,7 +215,7 @@ jobs:
 
           echo "Uploading JAR to CurseForge mod project ${MOD_CF_ID}..."
           RESPONSE=$(curl -sf \
-            -H "x-api-key: ${CURSEFORGE_TOKEN}" \
+            -H "X-Api-Token: ${CURSEFORGE_TOKEN}" \
             -F "metadata=${METADATA};type=application/json" \
             -F "file=@${JAR_NAME}" \
             "https://minecraft.curseforge.com/api/projects/${MOD_CF_ID}/upload-file")
