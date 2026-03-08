@@ -154,64 +154,47 @@ jobs:
           PROJECT_ID="${{ steps.meta.outputs.project_id }}"
           MOD_CF_ID="${{ steps.mod_meta.outputs.curseforge_mod_project_id }}"
 
-          # Search modrinth version by tag
+          # Fetch Modrinth version by tag
           echo "Fetching Modrinth version for tag ${VERSION}..."
           VERSION_DATA=$(curl -sf "https://api.modrinth.com/v2/project/${PROJECT_ID}/version" \
             | jq --arg v "${VERSION}+mod" '[.[] | select(.version_number == $v)] | first')
 
           if [ -z "$VERSION_DATA" ] || [ "$VERSION_DATA" = "null" ]; then
-            echo "Error: No Modrinth version found for tag ${VERSION}"
+            echo "Error: No Modrinth version found for tag ${VERSION}+mod"
             exit 1
           fi
 
-          # Search for JAR File
+          # Get JAR file URL
           JAR_URL=$(echo "$VERSION_DATA" | jq -r '.files[] | select(.filename | endswith(".jar")) | .url' | head -n1)
           JAR_NAME=$(echo "$VERSION_DATA" | jq -r '.files[] | select(.filename | endswith(".jar")) | .filename' | head -n1)
 
           if [ -z "$JAR_URL" ] || [ "$JAR_URL" = "null" ]; then
-            echo "Error: No JAR file found in Modrinth version ${VERSION}"
+            echo "Error: No JAR file found in Modrinth version"
             exit 1
           fi
 
           echo "Downloading JAR: ${JAR_NAME}"
           curl -L -o "${JAR_NAME}" "${JAR_URL}"
 
-          # Get Game versions + loaders from publish.json
-          MC_VERSIONS=$(jq -r '[.game_versions[]]' publish.json)
-          
-          # Get CurseForge game version IDs
-          echo "Fetching CurseForge game version IDs..."
-          
-          # Game versions fetchen und komplett ausgeben
+          # Get CurseForge game version list
           CF_VERSIONS_RAW=$(curl -s \
             -H "X-Api-Token: ${CURSEFORGE_TOKEN}" \
             "https://minecraft.curseforge.com/api/game/versions")
-          
-          echo "Raw response (first 500 chars): ${CF_VERSIONS_RAW:0:500}"
-          echo "---"
-          
-          # Schauen wie ein einzelner Eintrag aussieht
-          echo "First entry: $(echo "$CF_VERSIONS_RAW" | jq '.[0]')"
-          echo "---"
-          
-          # Testen ob der MC Version Name matcht
-          MC_VER="1.21.4"
-          echo "Looking for: $MC_VER"
-          echo "$CF_VERSIONS_RAW" | jq --arg v "$MC_VER" '.[] | select(.name == $v)'
-          
+
+          # Map Minecraft versions to CurseForge IDs (filter by gameVersionTypeID to avoid duplicates)
+          MC_VERSIONS=$(jq -r '[.game_versions[]]' publish.json)
           CF_VERSION_IDS=$(echo "$MC_VERSIONS" | jq -r '.[]' | while read -r MC_VER; do
             ID=$(echo "$CF_VERSIONS_RAW" | jq --arg v "$MC_VER" '[.[] | select(.name == $v and .gameVersionTypeID == 77784)] | first | .id')
             if [ -n "$ID" ] && [ "$ID" != "null" ]; then echo "$ID"; fi
           done | jq -Rs '[split("\n")[] | select(. != "") | tonumber]')
 
-          # Loader IDs aus CurseForge holen
+          # Map loader names to CurseForge IDs
           LOADER_IDS=$(jq -r '.loaders[]' publish.json | while read -r LOADER; do
-            # CurseForge hat Loader-Namen wie "Fabric", "Forge" etc. als gameVersions
-            ID=$(echo "$CF_VERSIONS_RAW" | jq --arg l "$LOADER" '[.[] | select(.name == ($l | ascii_downcase) or (.name | ascii_downcase) == ($l | ascii_downcase))] | first | .id')
+            ID=$(echo "$CF_VERSIONS_RAW" | jq --arg l "$LOADER" '[.[] | select((.name | ascii_downcase) == ($l | ascii_downcase))] | first | .id')
             if [ -n "$ID" ] && [ "$ID" != "null" ]; then echo "$ID"; fi
           done | jq -Rs '[split("\n")[] | select(. != "") | tonumber]')
-          
-          # Dann zusammenführen
+
+          # Merge version + loader IDs
           ALL_VERSION_IDS=$(echo "$CF_VERSION_IDS $LOADER_IDS" | jq -s 'add')
 
           # Map release type
@@ -229,7 +212,7 @@ jobs:
           METADATA=$(jq -n \
             --arg changelog "$CHANGELOG" \
             --arg releaseType "$CF_RELEASE_TYPE" \
-            --argjson gameVersions "$CF_VERSION_IDS" \
+            --argjson gameVersions "$ALL_VERSION_IDS" \
             '{
               changelog: $changelog,
               changelogType: "markdown",
@@ -238,21 +221,20 @@ jobs:
             }')
 
           echo "Uploading JAR to CurseForge mod project ${MOD_CF_ID}..."
-          RESPONSE=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+          RAW_RESPONSE=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
             -H "X-Api-Token: ${CURSEFORGE_TOKEN}" \
             -F "metadata=${METADATA};type=application/json" \
             -F "file=@${JAR_NAME}" \
             "https://minecraft.curseforge.com/api/projects/${MOD_CF_ID}/upload-file")
-          
-          HTTP_CODE=$(echo "$RESPONSE" | grep "HTTP_CODE:" | sed 's/HTTP_CODE://')
-          BODY=$(echo "$RESPONSE" | grep -v "HTTP_CODE:")
-          echo "HTTP Status: ${HTTP_CODE}"
-          echo "Response: ${BODY}"
 
-          echo "CurseForge response: ${RESPONSE}"
-          CF_FILE_ID=$(echo "$RESPONSE" | jq -r '.id // empty')
-          if [ -z "$CF_FILE_ID" ]; then
-            echo "Error: Upload failed"
+          HTTP_CODE=$(echo "$RAW_RESPONSE" | tail -n1 | sed 's/HTTP_CODE://')
+          RESPONSE=$(echo "$RAW_RESPONSE" | sed '$d')
+
+          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            echo "Error: CurseForge upload failed with HTTP ${HTTP_CODE}"
+            echo "Response: ${RESPONSE}"
             exit 1
           fi
+
+          CF_FILE_ID=$(echo "$RESPONSE" | jq -r '.id // empty')
           echo "Successfully uploaded JAR to CurseForge, file ID: ${CF_FILE_ID}"
