@@ -181,9 +181,23 @@ jobs:
           
           # Get CurseForge game version IDs
           echo "Fetching CurseForge game version IDs..."
+          
+          # Game versions fetchen und komplett ausgeben
           CF_VERSIONS_RAW=$(curl -s \
             -H "X-Api-Token: ${CURSEFORGE_TOKEN}" \
             "https://minecraft.curseforge.com/api/game/versions")
+          
+          echo "Raw response (first 500 chars): ${CF_VERSIONS_RAW:0:500}"
+          echo "---"
+          
+          # Schauen wie ein einzelner Eintrag aussieht
+          echo "First entry: $(echo "$CF_VERSIONS_RAW" | jq '.[0]')"
+          echo "---"
+          
+          # Testen ob der MC Version Name matcht
+          MC_VER="1.21.4"
+          echo "Looking for: $MC_VER"
+          echo "$CF_VERSIONS_RAW" | jq --arg v "$MC_VER" '.[] | select(.name == $v)'
           
           CF_VERSION_IDS=$(echo "$MC_VERSIONS" | jq -r '.[]' | while read -r MC_VER; do
             ID=$(echo "$CF_VERSIONS_RAW" | jq --arg v "$MC_VER" '.[] | select(.name == $v) | .id')
