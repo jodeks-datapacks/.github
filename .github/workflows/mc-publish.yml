@@ -277,118 +277,22 @@ jobs:
           echo "jar_file=${JAR_FILE}" >> $GITHUB_OUTPUT
         id: bundle
 
-      - name: Publish mod JAR to Modrinth
+      - name: Publish mod JAR to Modrinth & CurseForge
         if: steps.meta.outputs.curseforge_mod_project_id != ''
-        env:
-          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
-        run: |
-          VERSION="${{ github.event.release.tag_name }}"
-          PROJECT_ID="${{ steps.meta.outputs.project_id }}"
-          JAR_FILE="${{ steps.bundle.outputs.jar_file }}"
-          VERSION_TYPE="${{ steps.meta.outputs.version_type }}"
-          CHANGELOG="${{ github.event.release.body }}"
-
-          # Build game_versions JSON array
-          GAME_VERSIONS=$(jq -c '.game_versions' publish.json)
-
-          # Mod loaders for the JAR
-          MOD_LOADERS='["fabric","quilt","forge","neoforge"]'
-
-          # Create version via Modrinth API
-          METADATA=$(jq -n \
-            --arg name "${{ github.event.repository.name }} ${VERSION} (Mod)" \
-            --arg version_number "${VERSION}+mod" \
-            --arg changelog "$CHANGELOG" \
-            --arg version_type "$VERSION_TYPE" \
-            --argjson game_versions "$GAME_VERSIONS" \
-            --argjson loaders "$MOD_LOADERS" \
-            --arg project_id "$PROJECT_ID" \
-            '{
-              name: $name,
-              version_number: $version_number,
-              changelog: $changelog,
-              version_type: $version_type,
-              game_versions: $game_versions,
-              loaders: $loaders,
-              project_id: $project_id,
-              featured: false,
-              dependencies: [],
-              file_parts: ["file"]
-            }')
-
-          RESPONSE=$(curl -sf -X POST "https://api.modrinth.com/v2/version" \
-            -H "Authorization: ${MODRINTH_TOKEN}" \
-            -F "data=${METADATA};type=application/json" \
-            -F "file=@${JAR_FILE}")
-
-          MODRINTH_VERSION_ID=$(echo "$RESPONSE" | jq -r '.id')
-          echo "Published mod JAR to Modrinth, version ID: ${MODRINTH_VERSION_ID}"
-
-      - name: Upload mod JAR to CurseForge
-        if: steps.meta.outputs.curseforge_mod_project_id != ''
-        env:
-          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
-        run: |
-          JAR_FILE="${{ steps.bundle.outputs.jar_file }}"
-          MOD_CF_ID="${{ steps.meta.outputs.curseforge_mod_project_id }}"
-          CHANGELOG="${{ github.event.release.body }}"
-
-          # Get CurseForge game version list
-          CF_VERSIONS_RAW=$(curl -s \
-            -H "X-Api-Token: ${CURSEFORGE_TOKEN}" \
-            "https://minecraft.curseforge.com/api/game/versions")
-
-          # Map Minecraft versions to CurseForge IDs
-          MC_VERSIONS=$(jq -c '.game_versions' publish.json)
-          CF_VERSION_IDS=$(echo "$MC_VERSIONS" | jq -r '.[]' | while read -r MC_VER; do
-            ID=$(echo "$CF_VERSIONS_RAW" | jq --arg v "$MC_VER" '[.[] | select(.name == $v and .gameVersionTypeID == 77784)] | first | .id')
-            if [ -n "$ID" ] && [ "$ID" != "null" ]; then echo "$ID"; fi
-          done | jq -Rs '[split("\n")[] | select(. != "") | tonumber]')
-
-          # Map mod loaders to CurseForge IDs
-          LOADER_IDS=$(echo '["fabric","quilt","forge","neoforge"]' | jq -r '.[]' | while read -r LOADER; do
-            ID=$(echo "$CF_VERSIONS_RAW" | jq --arg l "$LOADER" '[.[] | select((.name | ascii_downcase) == ($l | ascii_downcase))] | first | .id')
-            if [ -n "$ID" ] && [ "$ID" != "null" ]; then echo "$ID"; fi
-          done | jq -Rs '[split("\n")[] | select(. != "") | tonumber]')
-
-          # Merge version + loader IDs
-          ALL_VERSION_IDS=$(echo "$CF_VERSION_IDS $LOADER_IDS" | jq -s 'add')
-
-          # Map release type
-          VERSION_TYPE=$(jq -r '.version_type // "release"' publish.json)
-          case "$VERSION_TYPE" in
-            release) CF_RELEASE_TYPE="release" ;;
-            beta)    CF_RELEASE_TYPE="beta" ;;
-            alpha)   CF_RELEASE_TYPE="alpha" ;;
-            *)       CF_RELEASE_TYPE="release" ;;
-          esac
-
-          METADATA=$(jq -n \
-            --arg changelog "$CHANGELOG" \
-            --arg releaseType "$CF_RELEASE_TYPE" \
-            --argjson gameVersions "$ALL_VERSION_IDS" \
-            '{
-              changelog: $changelog,
-              changelogType: "markdown",
-              releaseType: $releaseType,
-              gameVersions: $gameVersions
-            }')
-
-          echo "Uploading mod JAR to CurseForge project ${MOD_CF_ID}..."
-          RAW_RESPONSE=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
-            -H "X-Api-Token: ${CURSEFORGE_TOKEN}" \
-            -F "metadata=${METADATA};type=application/json" \
-            -F "file=@${JAR_FILE}" \
-            "https://minecraft.curseforge.com/api/projects/${MOD_CF_ID}/upload-file")
-
-          HTTP_CODE=$(echo "$RAW_RESPONSE" | tail -n1 | sed 's/HTTP_CODE://')
-          RESPONSE=$(echo "$RAW_RESPONSE" | sed '$d')
-
-          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
-            echo "Error: CurseForge upload failed with HTTP ${HTTP_CODE}"
-            echo "Response: ${RESPONSE}"
-            exit 1
-          fi
-
-          CF_FILE_ID=$(echo "$RESPONSE" | jq -r '.id // empty')
-          echo "Successfully uploaded mod JAR to CurseForge, file ID: ${CF_FILE_ID}"
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: ${{ steps.meta.outputs.project_id }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          curseforge-id: ${{ steps.meta.outputs.curseforge_mod_project_id }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          files: "*.jar"
+          name: ${{ github.event.repository.name }} ${{ github.event.release.tag_name }} (Mod)
+          version: ${{ github.event.release.tag_name }}+mod
+          version-type: ${{ steps.meta.outputs.version_type }}
+          changelog: ${{ github.event.release.body }}
+          loaders: |
+            fabric
+            quilt
+            forge
+            neoforge
+          game-versions: ${{ steps.meta.outputs.game_versions }}
