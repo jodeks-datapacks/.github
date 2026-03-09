@@ -19,6 +19,7 @@ jobs:
         run: |
           echo "project_id=$(jq -r '.project_id' publish.json)" >> $GITHUB_OUTPUT
           echo "curseforge_project_id=$(jq -r '.curseforge_project_id // ""' publish.json)" >> $GITHUB_OUTPUT
+          echo "curseforge_mod_project_id=$(jq -r '.curseforge_mod_project_id // ""' publish.json)" >> $GITHUB_OUTPUT
           echo "curseforge_slug=$(jq -r '.curseforge_slug // ""' publish.json)" >> $GITHUB_OUTPUT
           echo "loaders=$(jq -r '.loaders | join("\n")' publish.json)" >> $GITHUB_OUTPUT
           echo 'game_versions<<EOF' >> $GITHUB_OUTPUT
@@ -51,11 +52,26 @@ jobs:
           game-versions: ${{ steps.meta.outputs.game_versions }}
           dependencies: ${{ steps.meta.outputs.dependencies }}
       
-      - name: Get project icon
-        id: icon
+      - name: Fetch project metadata from Modrinth
+        id: modrinth
         run: |
-          ICON_URL=$(curl -s "https://api.modrinth.com/v2/project/${{ steps.meta.outputs.project_id }}" | jq -r '.icon_url // ""')
-          echo "url=${ICON_URL}" >> $GITHUB_OUTPUT
+          PROJECT_DATA=$(curl -sf "https://api.modrinth.com/v2/project/${{ steps.meta.outputs.project_id }}")
+          
+          ICON_URL=$(echo "$PROJECT_DATA" | jq -r '.icon_url // ""')
+          SLUG=$(echo "$PROJECT_DATA" | jq -r '.slug')
+          PACK_NAME=$(echo "$PROJECT_DATA" | jq -r '.title')
+          DESCRIPTION=$(echo "$PROJECT_DATA" | jq -r '.description')
+          LICENSE=$(echo "$PROJECT_DATA" | jq -r '.license.id // "All-Rights-Reserved"')
+          
+          # Derive mod_id from slug (hyphens -> underscores, lowercase only)
+          MOD_ID=$(echo "$SLUG" | tr '-' '_' | tr '[:upper:]' '[:lower:]')
+          
+          echo "icon_url=${ICON_URL}" >> $GITHUB_OUTPUT
+          echo "slug=${SLUG}" >> $GITHUB_OUTPUT
+          echo "mod_id=${MOD_ID}" >> $GITHUB_OUTPUT
+          echo "pack_name=${PACK_NAME}" >> $GITHUB_OUTPUT
+          echo "description=${DESCRIPTION}" >> $GITHUB_OUTPUT
+          echo "license=${LICENSE}" >> $GITHUB_OUTPUT
 
       - name: Check for noping flag
         id: ping_check
@@ -86,7 +102,7 @@ jobs:
           fi
           CHANGELOG=$(echo "${{ github.event.release.body }}" | sed 's/\[noping\]//gi' | sed '/^[[:space:]]*$/d' | jq -Rs . | sed 's/^"//;s/"$//')
           ROLE_ID="${{ steps.meta.outputs.discord_role_id }}"
-          ICON_URL="${{ steps.icon.outputs.url }}"
+          ICON_URL="${{ steps.modrinth.outputs.icon_url }}"
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           
           PAYLOAD=$(cat <<EOF
@@ -135,61 +151,202 @@ jobs:
             -H "Content-Type: application/json" \
             -d "{\"body\": ${BODY}}"
 
-      - name: Read mod project id
-        id: mod_meta
+      # ── Mod Bundling & Upload ──────────────────────────────────────────
+      - name: Bundle datapack as mod JAR
+        if: steps.meta.outputs.curseforge_mod_project_id != ''
         run: |
-          MOD_CF_ID=$(jq -r '.curseforge_mod_project_id // ""' publish.json)
-          echo "curseforge_mod_project_id=${MOD_CF_ID}" >> $GITHUB_OUTPUT
+          VERSION="${{ github.event.release.tag_name }}"
+          MOD_ID="${{ steps.modrinth.outputs.mod_id }}"
+          SLUG="${{ steps.modrinth.outputs.slug }}"
+          PACK_NAME="${{ steps.modrinth.outputs.pack_name }}"
+          DESCRIPTION="${{ steps.modrinth.outputs.description }}"
+          LICENSE="${{ steps.modrinth.outputs.license }}"
+          ICON_NAME="${SLUG}_pack.png"
+          PROJECT_URL="https://modrinth.com/datapack/${SLUG}"
+          PROJECT_ID="${{ steps.meta.outputs.project_id }}"
 
-      - name: Wait for manual Modrinth JAR
-        if: steps.mod_meta.outputs.curseforge_mod_project_id != ''
-        run: sleep 60
+          ZIP_FILE="${{ github.event.repository.name }}-${{ github.event.release.tag_name }}.zip"
+          JAR_FILE="${SLUG}-${VERSION}.jar"
 
-      - name: Fetch JAR from Modrinth and upload to CurseForge mod project
-        if: steps.mod_meta.outputs.curseforge_mod_project_id != ''
+          # Extract the datapack zip
+          mkdir mod-temp
+          unzip "${ZIP_FILE}" -d mod-temp
+
+          # Copy pack icon for mod loaders
+          if [ -f "mod-temp/pack.png" ]; then
+            cp mod-temp/pack.png "mod-temp/${ICON_NAME}"
+          fi
+
+          # ── Fabric ──
+          cat > mod-temp/fabric.mod.json << FABRIC_EOF
+          {
+            "schemaVersion": 1,
+            "id": "${MOD_ID}",
+            "version": "${VERSION}",
+            "name": "${PACK_NAME}",
+            "description": "${DESCRIPTION}",
+            "authors": ["jodek"],
+            "contact": {
+              "homepage": "${PROJECT_URL}"
+            },
+            "license": "${LICENSE}",
+            "icon": "${ICON_NAME}",
+            "environment": "*",
+            "depends": {
+              "fabric-resource-loader-v0": "*"
+            }
+          }
+          FABRIC_EOF
+
+          # ── Quilt ──
+          cat > mod-temp/quilt.mod.json << QUILT_EOF
+          {
+            "schema_version": 1,
+            "quilt_loader": {
+              "group": "com.modrinth",
+              "id": "${MOD_ID}",
+              "version": "${VERSION}",
+              "metadata": {
+                "name": "${PACK_NAME}",
+                "description": "${DESCRIPTION}",
+                "contributors": {
+                  "jodek": "Owner"
+                },
+                "contact": {
+                  "homepage": "${PROJECT_URL}"
+                },
+                "icon": "${ICON_NAME}"
+              },
+              "intermediate_mappings": "net.fabricmc:intermediary",
+              "depends": [
+                {
+                  "id": "quilt_resource_loader",
+                  "versions": "*",
+                  "unless": "fabric-resource-loader-v0"
+                }
+              ]
+            }
+          }
+          QUILT_EOF
+
+          # ── Forge ──
+          mkdir -p mod-temp/META-INF
+          cat > mod-temp/META-INF/mods.toml << FORGE_EOF
+          modLoader = 'lowcodefml'
+          loaderVersion = '[40,)'
+          license = '${LICENSE}'
+          showAsResourcePack = false
+
+          [[mods]]
+          modId = '${MOD_ID}'
+          version = '${VERSION}'
+          displayName = '${PACK_NAME}'
+          description = '${DESCRIPTION}'
+          logoFile = '${ICON_NAME}'
+          updateJSONURL = 'https://api.modrinth.com/updates/${PROJECT_ID}/forge_updates.json'
+          credits = 'Generated by GitHub Actions'
+          authors = 'jodek'
+          displayURL = '${PROJECT_URL}'
+          FORGE_EOF
+
+          # ── NeoForge ──
+          cat > mod-temp/META-INF/neoforge.mods.toml << NEOFORGE_EOF
+          modLoader = 'lowcodefml'
+          loaderVersion = '[1,)'
+          license = '${LICENSE}'
+          showAsResourcePack = false
+
+          [[mods]]
+          modId = '${MOD_ID}'
+          version = '${VERSION}'
+          displayName = '${PACK_NAME}'
+          description = '${DESCRIPTION}'
+          logoFile = '${ICON_NAME}'
+          updateJSONURL = 'https://api.modrinth.com/updates/${PROJECT_ID}/forge_updates.json?neoforge=only'
+          credits = 'Generated by GitHub Actions'
+          authors = 'jodek'
+          displayURL = '${PROJECT_URL}'
+          NEOFORGE_EOF
+
+          # Package as JAR
+          cd mod-temp
+          jar cf "../${JAR_FILE}" .
+          cd ..
+          rm -rf mod-temp
+
+          echo "jar_file=${JAR_FILE}" >> $GITHUB_OUTPUT
+        id: bundle
+
+      - name: Publish mod JAR to Modrinth
+        if: steps.meta.outputs.curseforge_mod_project_id != ''
         env:
-          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
         run: |
           VERSION="${{ github.event.release.tag_name }}"
           PROJECT_ID="${{ steps.meta.outputs.project_id }}"
-          MOD_CF_ID="${{ steps.mod_meta.outputs.curseforge_mod_project_id }}"
+          JAR_FILE="${{ steps.bundle.outputs.jar_file }}"
+          VERSION_TYPE="${{ steps.meta.outputs.version_type }}"
+          CHANGELOG="${{ github.event.release.body }}"
 
-          # Fetch Modrinth version by tag
-          echo "Fetching Modrinth version for tag ${VERSION}..."
-          VERSION_DATA=$(curl -sf "https://api.modrinth.com/v2/project/${PROJECT_ID}/version" \
-            | jq --arg v "${VERSION}+mod" '[.[] | select(.version_number == $v)] | first')
+          # Build game_versions JSON array
+          GAME_VERSIONS=$(jq -c '.game_versions' publish.json)
 
-          if [ -z "$VERSION_DATA" ] || [ "$VERSION_DATA" = "null" ]; then
-            echo "Error: No Modrinth version found for tag ${VERSION}+mod"
-            exit 1
-          fi
+          # Mod loaders for the JAR
+          MOD_LOADERS='["fabric","quilt","forge","neoforge"]'
 
-          # Get JAR file URL
-          JAR_URL=$(echo "$VERSION_DATA" | jq -r '.files[] | select(.filename | endswith(".jar")) | .url' | head -n1)
-          JAR_NAME=$(echo "$VERSION_DATA" | jq -r '.files[] | select(.filename | endswith(".jar")) | .filename' | head -n1)
+          # Create version via Modrinth API
+          METADATA=$(jq -n \
+            --arg name "${{ github.event.repository.name }} ${VERSION} (Mod)" \
+            --arg version_number "${VERSION}+mod" \
+            --arg changelog "$CHANGELOG" \
+            --arg version_type "$VERSION_TYPE" \
+            --argjson game_versions "$GAME_VERSIONS" \
+            --argjson loaders "$MOD_LOADERS" \
+            --arg project_id "$PROJECT_ID" \
+            '{
+              name: $name,
+              version_number: $version_number,
+              changelog: $changelog,
+              version_type: $version_type,
+              game_versions: $game_versions,
+              loaders: $loaders,
+              project_id: $project_id,
+              featured: false,
+              dependencies: [],
+              file_parts: ["file"]
+            }')
 
-          if [ -z "$JAR_URL" ] || [ "$JAR_URL" = "null" ]; then
-            echo "Error: No JAR file found in Modrinth version"
-            exit 1
-          fi
+          RESPONSE=$(curl -sf -X POST "https://api.modrinth.com/v2/version" \
+            -H "Authorization: ${MODRINTH_TOKEN}" \
+            -F "data=${METADATA};type=application/json" \
+            -F "file=@${JAR_FILE}")
 
-          echo "Downloading JAR: ${JAR_NAME}"
-          curl -L -o "${JAR_NAME}" "${JAR_URL}"
+          MODRINTH_VERSION_ID=$(echo "$RESPONSE" | jq -r '.id')
+          echo "Published mod JAR to Modrinth, version ID: ${MODRINTH_VERSION_ID}"
+
+      - name: Upload mod JAR to CurseForge
+        if: steps.meta.outputs.curseforge_mod_project_id != ''
+        env:
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+        run: |
+          JAR_FILE="${{ steps.bundle.outputs.jar_file }}"
+          MOD_CF_ID="${{ steps.meta.outputs.curseforge_mod_project_id }}"
+          CHANGELOG="${{ github.event.release.body }}"
 
           # Get CurseForge game version list
           CF_VERSIONS_RAW=$(curl -s \
             -H "X-Api-Token: ${CURSEFORGE_TOKEN}" \
             "https://minecraft.curseforge.com/api/game/versions")
 
-          # Map Minecraft versions to CurseForge IDs (filter by gameVersionTypeID to avoid duplicates)
-          MC_VERSIONS=$(jq -r '[.game_versions[]]' publish.json)
+          # Map Minecraft versions to CurseForge IDs
+          MC_VERSIONS=$(jq -c '.game_versions' publish.json)
           CF_VERSION_IDS=$(echo "$MC_VERSIONS" | jq -r '.[]' | while read -r MC_VER; do
             ID=$(echo "$CF_VERSIONS_RAW" | jq --arg v "$MC_VER" '[.[] | select(.name == $v and .gameVersionTypeID == 77784)] | first | .id')
             if [ -n "$ID" ] && [ "$ID" != "null" ]; then echo "$ID"; fi
           done | jq -Rs '[split("\n")[] | select(. != "") | tonumber]')
 
-          # Map loader names to CurseForge IDs
-          LOADER_IDS=$(jq -r '.loaders[]' publish.json | while read -r LOADER; do
+          # Map mod loaders to CurseForge IDs
+          LOADER_IDS=$(echo '["fabric","quilt","forge","neoforge"]' | jq -r '.[]' | while read -r LOADER; do
             ID=$(echo "$CF_VERSIONS_RAW" | jq --arg l "$LOADER" '[.[] | select((.name | ascii_downcase) == ($l | ascii_downcase))] | first | .id')
             if [ -n "$ID" ] && [ "$ID" != "null" ]; then echo "$ID"; fi
           done | jq -Rs '[split("\n")[] | select(. != "") | tonumber]')
@@ -206,9 +363,6 @@ jobs:
             *)       CF_RELEASE_TYPE="release" ;;
           esac
 
-          CHANGELOG="${{ github.event.release.body }}"
-
-          # Build metadata JSON
           METADATA=$(jq -n \
             --arg changelog "$CHANGELOG" \
             --arg releaseType "$CF_RELEASE_TYPE" \
@@ -220,11 +374,11 @@ jobs:
               gameVersions: $gameVersions
             }')
 
-          echo "Uploading JAR to CurseForge mod project ${MOD_CF_ID}..."
+          echo "Uploading mod JAR to CurseForge project ${MOD_CF_ID}..."
           RAW_RESPONSE=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
             -H "X-Api-Token: ${CURSEFORGE_TOKEN}" \
             -F "metadata=${METADATA};type=application/json" \
-            -F "file=@${JAR_NAME}" \
+            -F "file=@${JAR_FILE}" \
             "https://minecraft.curseforge.com/api/projects/${MOD_CF_ID}/upload-file")
 
           HTTP_CODE=$(echo "$RAW_RESPONSE" | tail -n1 | sed 's/HTTP_CODE://')
@@ -237,4 +391,4 @@ jobs:
           fi
 
           CF_FILE_ID=$(echo "$RESPONSE" | jq -r '.id // empty')
-          echo "Successfully uploaded JAR to CurseForge, file ID: ${CF_FILE_ID}"
+          echo "Successfully uploaded mod JAR to CurseForge, file ID: ${CF_FILE_ID}"
