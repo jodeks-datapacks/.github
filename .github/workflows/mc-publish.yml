@@ -62,8 +62,9 @@ jobs:
           PACK_NAME=$(echo "$PROJECT_DATA" | jq -r '.title')
           DESCRIPTION=$(echo "$PROJECT_DATA" | jq -r '.description')
           LICENSE=$(echo "$PROJECT_DATA" | jq -r '.license.id // "All-Rights-Reserved"')
+          SOURCE_URL=$(echo "$PROJECT_DATA" | jq -r '.source_url // ""')
+          ISSUES_URL=$(echo "$PROJECT_DATA" | jq -r '.issues_url // ""')
           
-          # Derive mod_id from slug (hyphens -> underscores, lowercase only)
           MOD_ID=$(echo "$SLUG" | tr '-' '_' | tr '[:upper:]' '[:lower:]')
           
           echo "icon_url=${ICON_URL}" >> $GITHUB_OUTPUT
@@ -72,6 +73,26 @@ jobs:
           echo "pack_name=${PACK_NAME}" >> $GITHUB_OUTPUT
           echo "description=${DESCRIPTION}" >> $GITHUB_OUTPUT
           echo "license=${LICENSE}" >> $GITHUB_OUTPUT
+          echo "source_url=${SOURCE_URL}" >> $GITHUB_OUTPUT
+          echo "issues_url=${ISSUES_URL}" >> $GITHUB_OUTPUT
+
+      - name: Fetch team members from Modrinth
+        id: team
+        run: |
+          MEMBERS_DATA=$(curl -sf "https://api.modrinth.com/v2/project/${{ steps.meta.outputs.project_id }}/members")
+          
+          # Für fabric.mod.json: Array von Usernames ["Jodek", "Mqx"]
+          AUTHORS_JSON=$(echo "$MEMBERS_DATA" | jq '[.[] | select(.accepted == true) | .user.username]')
+          
+          # Für quilt.mod.json: Objekt {"Jodek": "Owner", "Mqx": "Member"}
+          CONTRIBUTORS_JSON=$(echo "$MEMBERS_DATA" | jq '[.[] | select(.accepted == true) | {(.user.username): .role}] | add')
+          
+          # Für Forge/NeoForge: Komma-separierter String "Jodek, Mqx"
+          AUTHORS_STRING=$(echo "$MEMBERS_DATA" | jq -r '[.[] | select(.accepted == true) | .user.username] | join(", ")')
+          
+          echo "authors_json=${AUTHORS_JSON}" >> $GITHUB_OUTPUT
+          echo "contributors_json=${CONTRIBUTORS_JSON}" >> $GITHUB_OUTPUT
+          echo "authors_string=${AUTHORS_STRING}" >> $GITHUB_OUTPUT
 
       - name: Check for noping flag
         id: ping_check
@@ -164,6 +185,11 @@ jobs:
           ICON_NAME="${SLUG}_pack.png"
           PROJECT_URL="https://modrinth.com/datapack/${SLUG}"
           PROJECT_ID="${{ steps.meta.outputs.project_id }}"
+          SOURCE_URL="${{ steps.modrinth.outputs.source_url }}"
+          ISSUES_URL="${{ steps.modrinth.outputs.issues_url }}"
+          AUTHORS_JSON='${{ steps.team.outputs.authors_json }}'
+          CONTRIBUTORS_JSON='${{ steps.team.outputs.contributors_json }}'
+          AUTHORS_STRING="${{ steps.team.outputs.authors_string }}"
 
           ZIP_FILE="${{ github.event.repository.name }}-${{ github.event.release.tag_name }}.zip"
           JAR_FILE="${SLUG}-${VERSION}.jar"
@@ -176,24 +202,28 @@ jobs:
           fi
 
           # Fabric
-          cat > mod-temp/fabric.mod.json << EOF
+          cat > mod-temp/fabric.mod.json << FABEOF
           {
             "schemaVersion": 1,
             "id": "${MOD_ID}",
             "version": "${VERSION}",
             "name": "${PACK_NAME}",
             "description": "${DESCRIPTION}",
-            "authors": ["jodek"],
-            "contact": { "homepage": "${PROJECT_URL}" },
+            "authors": ${AUTHORS_JSON},
+            "contact": {
+              "homepage": "${PROJECT_URL}",
+              "sources": "${SOURCE_URL}",
+              "issues": "${ISSUES_URL}"
+            },
             "license": "${LICENSE}",
             "icon": "${ICON_NAME}",
             "environment": "*",
             "depends": { "fabric-resource-loader-v0": "*" }
           }
-          EOF
+          FABEOF
 
           # Quilt
-          cat > mod-temp/quilt.mod.json << EOF
+          cat > mod-temp/quilt.mod.json << QUILTEOF
           {
             "schema_version": 1,
             "quilt_loader": {
@@ -203,8 +233,12 @@ jobs:
               "metadata": {
                 "name": "${PACK_NAME}",
                 "description": "${DESCRIPTION}",
-                "contributors": { "jodek": "Owner" },
-                "contact": { "homepage": "${PROJECT_URL}" },
+                "contributors": ${CONTRIBUTORS_JSON},
+                "contact": {
+                  "homepage": "${PROJECT_URL}",
+                  "sources": "${SOURCE_URL}",
+                  "issues": "${ISSUES_URL}"
+                },
                 "icon": "${ICON_NAME}"
               },
               "intermediate_mappings": "net.fabricmc:intermediary",
@@ -213,30 +247,32 @@ jobs:
               ]
             }
           }
-          EOF
+          QUILTEOF
 
           # Forge
           mkdir -p mod-temp/META-INF
-          cat > mod-temp/META-INF/mods.toml << EOF
+          cat > mod-temp/META-INF/mods.toml << FORGEEOF
           modLoader = 'lowcodefml'
           loaderVersion = '[40,)'
           license = '${LICENSE}'
           showAsResourcePack = false
           mods = [
-            { modId = '${MOD_ID}', version = '${VERSION}', displayName = '${PACK_NAME}', description = '${DESCRIPTION}', logoFile = '${ICON_NAME}', updateJSONURL = 'https://api.modrinth.com/updates/${PROJECT_ID}/forge_updates.json', credits = 'Generated by GitHub Actions', authors = 'jodek', displayURL = '${PROJECT_URL}' },
+            { modId = '${MOD_ID}', version = '${VERSION}', displayName = '${PACK_NAME}', description = '${DESCRIPTION}', logoFile = '${ICON_NAME}', updateJSONURL = 'https://api.modrinth.com/updates/${PROJECT_ID}/forge_updates.json', credits = 'Generated by Modrinth', authors = '${AUTHORS_STRING}', displayURL = '${PROJECT_URL}' },
           ]
-          EOF
+          issueTrackerURL = '${ISSUES_URL}'
+          FORGEEOF
 
           # NeoForge
-          cat > mod-temp/META-INF/neoforge.mods.toml << EOF
+          cat > mod-temp/META-INF/neoforge.mods.toml << NEOEOF
           modLoader = 'javafml'
           loaderVersion = '[1,)'
           license = '${LICENSE}'
           showAsResourcePack = false
           mods = [
-            { modId = '${MOD_ID}', version = '${VERSION}', displayName = '${PACK_NAME}', description = '${DESCRIPTION}', logoFile = '${ICON_NAME}', updateJSONURL = 'https://api.modrinth.com/updates/${PROJECT_ID}/forge_updates.json?neoforge=only', credits = 'Generated by GitHub Actions', authors = 'jodek', displayURL = '${PROJECT_URL}' },
+            { modId = '${MOD_ID}', version = '${VERSION}', displayName = '${PACK_NAME}', description = '${DESCRIPTION}', logoFile = '${ICON_NAME}', updateJSONURL = 'https://api.modrinth.com/updates/${PROJECT_ID}/forge_updates.json?neoforge=only', credits = 'Generated by Modrinth', authors = '${AUTHORS_STRING}', displayURL = '${PROJECT_URL}' },
           ]
-          EOF
+          issueTrackerURL = '${ISSUES_URL}'
+          NEOEOF
 
           cd mod-temp
           jar cf "../${JAR_FILE}" .
@@ -254,7 +290,7 @@ jobs:
           curseforge-id: ${{ steps.meta.outputs.curseforge_mod_project_id }}
           curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
           files: "*.jar"
-          name: ${{ github.event.repository.name }} ${{ github.event.release.tag_name }} (Mod)
+          name: ${{ github.event.repository.name }} ${{ github.event.release.tag_name }}
           version: ${{ github.event.release.tag_name }}+mod
           version-type: ${{ steps.meta.outputs.version_type }}
           changelog: ${{ github.event.release.body }}
