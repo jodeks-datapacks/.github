@@ -76,24 +76,6 @@ jobs:
           echo "source_url=${SOURCE_URL}" >> $GITHUB_OUTPUT
           echo "issues_url=${ISSUES_URL}" >> $GITHUB_OUTPUT
 
-      - name: Fetch team members from Modrinth
-        id: team
-        run: |
-          MEMBERS_DATA=$(curl -sf "https://api.modrinth.com/v2/project/${{ steps.meta.outputs.project_id }}/members")
-          
-          # Für fabric.mod.json: Array von Usernames ["Jodek", "Mqx"]
-          AUTHORS_JSON=$(echo "$MEMBERS_DATA" | jq '[.[] | select(.accepted == true) | .user.username]')
-          
-          # Für quilt.mod.json: Objekt {"Jodek": "Owner", "Mqx": "Member"}
-          CONTRIBUTORS_JSON=$(echo "$MEMBERS_DATA" | jq '[.[] | select(.accepted == true) | {(.user.username): .role}] | add')
-          
-          # Für Forge/NeoForge: Komma-separierter String "Jodek, Mqx"
-          AUTHORS_STRING=$(echo "$MEMBERS_DATA" | jq -r '[.[] | select(.accepted == true) | .user.username] | join(", ")')
-          
-          echo "authors_json=${AUTHORS_JSON}" >> $GITHUB_OUTPUT
-          echo "contributors_json=${CONTRIBUTORS_JSON}" >> $GITHUB_OUTPUT
-          echo "authors_string=${AUTHORS_STRING}" >> $GITHUB_OUTPUT
-
       - name: Check for noping flag
         id: ping_check
         run: |
@@ -187,9 +169,9 @@ jobs:
           PROJECT_ID="${{ steps.meta.outputs.project_id }}"
           SOURCE_URL="${{ steps.modrinth.outputs.source_url }}"
           ISSUES_URL="${{ steps.modrinth.outputs.issues_url }}"
-          AUTHORS_JSON='${{ steps.team.outputs.authors_json }}'
-          CONTRIBUTORS_JSON='${{ steps.team.outputs.contributors_json }}'
-          AUTHORS_STRING="${{ steps.team.outputs.authors_string }}"
+          AUTHORS_JSON='["Jodek"]'
+          CONTRIBUTORS_JSON='{"Jodek": "Owner"}'
+          AUTHORS_STRING="Jodek"
 
           ZIP_FILE="${{ github.event.repository.name }}-${{ github.event.release.tag_name }}.zip"
           JAR_FILE="${SLUG}-${VERSION}.jar"
