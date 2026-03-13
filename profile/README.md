@@ -53,6 +53,7 @@ On the list, coming after the high priority items
 |---|---|---|
 | 🎬 **Video Showcases** | `Planned` | More and better video content --> showcases, tutorials, and feature highlights for each datapack |
 | 🔄 **Faster Version Updates** | `Planned` | Better testing and automation so datapacks can be verified faster when new Minecraft versions drop |
+| 🔼 **Bigger Version Support** | `Planned` | Adding support for lower and higher game versions to my datapacks |
 | 🧩 **New Datapacks & Mods** | `Planned` | Expanding the collection with new datapacks and potentially Fabric mods for things datapacks can't do alone |
 
 <p align="center">
