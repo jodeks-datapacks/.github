@@ -26,10 +26,10 @@ jobs:
           jq -r '.game_versions[]' publish.json >> $GITHUB_OUTPUT
           echo 'EOF' >> $GITHUB_OUTPUT
           echo 'dependencies_datapack<<EOF' >> $GITHUB_OUTPUT
-          jq -r '.dependencies.datapack[]' publish.json >> $GITHUB_OUTPUT
+          jq -r '.dependencies.datapack[]? // empty' publish.json >> $GITHUB_OUTPUT
           echo 'EOF' >> $GITHUB_OUTPUT
           echo 'dependencies_mod<<EOF' >> $GITHUB_OUTPUT
-          jq -r '.dependencies.mod[]' publish.json >> $GITHUB_OUTPUT
+          jq -r '.dependencies.mod[]? // empty' publish.json >> $GITHUB_OUTPUT
           echo 'EOF' >> $GITHUB_OUTPUT
           echo "version_type=$(jq -r '.version_type // "release"' publish.json)" >> $GITHUB_OUTPUT
           echo "discord_role_id=$(jq -r '.discord_role_id // ""' publish.json)" >> $GITHUB_OUTPUT
