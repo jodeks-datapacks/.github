@@ -50,7 +50,7 @@ jobs:
           changelog: ${{ github.event.release.body }}
           loaders: ${{ steps.meta.outputs.loaders }}
           game-versions: ${{ steps.meta.outputs.game_versions }}
-          dependencies: ${{ steps.meta.outputs.dependencies }}
+          dependencies: ${{ steps.meta.outputs.dependencies_datapack }}
       
       - name: Fetch project metadata from Modrinth
         id: modrinth
@@ -282,3 +282,4 @@ jobs:
             forge
             neoforge
           game-versions: ${{ steps.meta.outputs.game_versions }}
+          dependencies: ${{ steps.meta.outputs.dependencies_mod }}
