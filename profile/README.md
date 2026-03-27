@@ -31,9 +31,9 @@ These are always being worked on alongside everything else
 
 | | Status | Description |
 |---|---|---|
-| 🐛 **Bug Fixes** | `Always active` | Continuously fixing reported issues and edge cases across all datapacks |
-| ⚡ **Performance** | `Always active` | Optimizing tick heavy functions and reducing unnecessary command executions |
-| ✨ **New Features** | `Always active` | Adding new functionality and expanding existing datapacks based on community feedback |
+| **Bug Fixes** | `Always active` | Continuously fixing reported issues and edge cases across all datapacks |
+| **Performance** | `Always active` | Optimizing tick heavy functions and reducing unnecessary command executions |
+| **New Features** | `Always active` | Adding new functionality and expanding existing datapacks based on community feedback |
 
 ## 🔝 High Priority
 
@@ -41,9 +41,9 @@ The main focus right now
 
 | | Status | Description |
 |---|---|---|
-| 🎨 **Page Redesign** | `In Progress` | Revamping project pages with clearer docs and a more polished look |
-| 🌍 **Full Translations** | `In Progress` | Complete localization for all datapacks so they're accessible regardless of language |
-| ⚙️ **Full Config System** | `In Progress` | Making every datapack fully configurable --> toggle load messages, disable Jodek advancements, and more |
+| **Page Redesign** | `In Progress` | Revamping project pages with clearer docs and a more polished look |
+| **Full Translations** | `In Progress` | Complete localization for all datapacks so they're accessible regardless of language |
+| **Full Config System** | `In Progress` | Making every datapack fully configurable --> toggle load messages, disable Jodek advancements, and more |
 
 ## 🔜 Planned
 
@@ -51,10 +51,10 @@ On the list, coming after the high priority items
 
 | | Status | Description |
 |---|---|---|
-| 🎬 **Video Showcases** | `Planned` | More and better video content --> showcases, tutorials, and feature highlights for each datapack |
-| 🔄 **Faster Version Updates** | `Planned` | Better testing and automation so datapacks can be verified faster when new Minecraft versions drop |
-| 🔼 **Bigger Version Support** | `Planned` | Adding support for lower and higher game versions to my datapacks |
-| 🧩 **New Datapacks & Mods** | `Planned` | Expanding the collection with new datapacks and potentially Fabric mods for things datapacks can't do alone |
+| **Video Showcases** | `Planned` | More and better video content --> showcases, tutorials, and feature highlights for each datapack |
+| **Faster Version Updates** | `Planned` | Better testing and automation so datapacks can be verified faster when new Minecraft versions drop |
+| **Bigger Version Support** | `Planned` | Adding support for lower and higher game versions to my datapacks |
+| **New Datapacks & Mods** | `Planned` | Expanding the collection with new datapacks and potentially Fabric mods for things datapacks can't do alone |
 
 <p align="center">
   <a href="https://github.com/jodeks-datapacks">github.com/jodeks-datapacks</a> · <a href="https://modrinth.com/user/Jodek">Modrinth</a> · <a href="https://www.curseforge.com/members/jodek/projects">Curseforge</a> · <a href="https://jodek.dev">jodek.dev</a>
