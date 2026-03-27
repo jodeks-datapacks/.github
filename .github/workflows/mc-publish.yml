@@ -76,7 +76,9 @@ jobs:
           echo "slug=${SLUG}" >> $GITHUB_OUTPUT
           echo "mod_id=${MOD_ID}" >> $GITHUB_OUTPUT
           echo "pack_name=${PACK_NAME}" >> $GITHUB_OUTPUT
-          echo "description=${DESCRIPTION}" >> $GITHUB_OUTPUT
+          echo 'description<<EOF' >> $GITHUB_OUTPUT 
+          echo "$DESCRIPTION" >> $GITHUB_OUTPUT 
+          echo 'EOF' >> $GITHUB_OUTPUT
           echo "license=${LICENSE}" >> $GITHUB_OUTPUT
           echo "source_url=${SOURCE_URL}" >> $GITHUB_OUTPUT
           echo "issues_url=${ISSUES_URL}" >> $GITHUB_OUTPUT
@@ -159,7 +161,7 @@ jobs:
           MOD_ID="${{ steps.modrinth.outputs.mod_id }}"
           SLUG="${{ steps.modrinth.outputs.slug }}"
           PACK_NAME="${{ steps.modrinth.outputs.pack_name }}"
-          DESCRIPTION="${{ steps.modrinth.outputs.description }}"
+          DESCRIPTION=$(echo '${{ steps.modrinth.outputs.description }}' | sed 's/"/\"/g')
           LICENSE="${{ steps.modrinth.outputs.license }}"
           ICON_NAME="${SLUG}_pack.png"
           PROJECT_URL="https://modrinth.com/datapack/${SLUG}"
