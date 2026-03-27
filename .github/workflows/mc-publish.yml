@@ -65,7 +65,7 @@ jobs:
           ICON_URL=$(echo "$PROJECT_DATA" | jq -r '.icon_url // ""')
           SLUG=$(echo "$PROJECT_DATA" | jq -r '.slug')
           PACK_NAME=$(echo "$PROJECT_DATA" | jq -r '.title')
-          DESCRIPTION=$(echo "$PROJECT_DATA" | jq -r '.description')
+          DESCRIPTION=$(echo "$PROJECT_DATA" | jq -r '.description' | sed 's/"/\"/g')
           LICENSE=$(echo "$PROJECT_DATA" | jq -r '.license.id // "All-Rights-Reserved"')
           SOURCE_URL=$(echo "$PROJECT_DATA" | jq -r '.source_url // ""')
           ISSUES_URL=$(echo "$PROJECT_DATA" | jq -r '.issues_url // ""')
