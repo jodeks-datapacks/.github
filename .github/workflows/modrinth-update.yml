@@ -18,12 +18,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ github.token }}
 
       - name: Read publish.json
         id: meta
         run: |
           MODRINTH_ID=$(jq -r '.modrinth_id' publish.json)
           echo "modrinth_id=${MODRINTH_ID}" >> $GITHUB_OUTPUT
+
+      # ─── Icon ───
 
       - name: Update icon on Modrinth
         if: contains(inputs.targets, 'icon')
@@ -41,14 +45,17 @@ jobs:
             "https://api.modrinth.com/v2/project/${{ steps.meta.outputs.modrinth_id }}/icon?ext=png")
 
           if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
-            echo "✅ Icon updated successfully (HTTP $HTTP_CODE)"
+            echo "✅ Icon updated on Modrinth (HTTP $HTTP_CODE)"
           else
             echo "::error::Icon update failed (HTTP $HTTP_CODE)"
             exit 1
           fi
 
-      - name: Update description on Modrinth
+      # ─── Description (Modrinth + Datapack files) ───
+
+      - name: Get GitHub repo description
         if: contains(inputs.targets, 'description')
+        id: repo_desc
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -59,7 +66,12 @@ jobs:
             exit 1
           fi
 
-          HTTP_CODE=$(jq -n --arg desc "$REPO_DESC" '{"description": $desc}' | \
+          echo "desc=${REPO_DESC}" >> $GITHUB_OUTPUT
+
+      - name: Update description on Modrinth
+        if: contains(inputs.targets, 'description')
+        run: |
+          HTTP_CODE=$(jq -n --arg desc "${{ steps.repo_desc.outputs.desc }}" '{"description": $desc}' | \
             curl -s -o /dev/null -w "%{http_code}" \
               -X PATCH \
               -H "Authorization: ${{ secrets.MODRINTH_TOKEN }}" \
@@ -68,11 +80,88 @@ jobs:
               "https://api.modrinth.com/v2/project/${{ steps.meta.outputs.modrinth_id }}")
 
           if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
-            echo "✅ Description updated successfully (HTTP $HTTP_CODE)"
+            echo "✅ Description updated on Modrinth (HTTP $HTTP_CODE)"
           else
-            echo "::error::Description update failed (HTTP $HTTP_CODE)"
+            echo "::error::Description update on Modrinth failed (HTTP $HTTP_CODE)"
             exit 1
           fi
+
+      - name: Update description in datapack files
+        if: contains(inputs.targets, 'description')
+        env:
+          NEW_DESC: ${{ steps.repo_desc.outputs.desc }}
+        run: |
+          REPO_NAME=$(basename "${{ github.repository }}")
+          # Derive namespace from repo name: lowercase, hyphens to underscores
+          NAMESPACE=$(echo "$REPO_NAME" | tr '[:upper:]' '[:lower:]' | tr '-' '_')
+
+          FILES_CHANGED=0
+
+          # ── 1. pack.mcmeta ──
+          if [ -f "pack.mcmeta" ]; then
+            jq --arg desc "$NEW_DESC" '
+              .pack.description = [
+                .pack.description[] |
+                if type == "object" and (.translate // "" | endswith(".description")) then
+                  .fallback = $desc
+                else
+                  .
+                end
+              ]
+            ' pack.mcmeta > pack.mcmeta.tmp && mv pack.mcmeta.tmp pack.mcmeta
+            echo "  ✅ pack.mcmeta updated"
+            FILES_CHANGED=$((FILES_CHANGED + 1))
+          else
+            echo "  ⚠️ pack.mcmeta not found, skipping"
+          fi
+
+          # ── 2. Advancement JSON (data/jodek/advancement/<namespace>.json) ──
+          ADV_FILE="data/jodek/advancement/${NAMESPACE}.json"
+          if [ -f "$ADV_FILE" ]; then
+            jq --arg desc "$NEW_DESC" '
+              .display.description = [
+                .display.description[] |
+                if type == "object" and (.translate // "" | endswith(".description")) then
+                  .fallback = $desc
+                else
+                  .
+                end
+              ]
+            ' "$ADV_FILE" > "${ADV_FILE}.tmp" && mv "${ADV_FILE}.tmp" "$ADV_FILE"
+            echo "  ✅ ${ADV_FILE} updated"
+            FILES_CHANGED=$((FILES_CHANGED + 1))
+          else
+            echo "  ⚠️ ${ADV_FILE} not found, skipping"
+          fi
+
+          # ── 3. image.mcfunction (data/<namespace>/function/config/image.mcfunction) ──
+          IMG_FILE="data/${NAMESPACE}/function/config/image.mcfunction"
+          if [ -f "$IMG_FILE" ]; then
+            # Replace the fallback value in the line with the .description translate key
+            sed -i -E "s/(translate: \"${NAMESPACE}\.description\", fallback: \")[^\"]*(\")/\1${NEW_DESC}\2/" "$IMG_FILE"
+            echo "  ✅ ${IMG_FILE} updated"
+            FILES_CHANGED=$((FILES_CHANGED + 1))
+          else
+            echo "  ⚠️ ${IMG_FILE} not found, skipping"
+          fi
+
+          echo "Updated ${FILES_CHANGED} file(s)"
+
+      - name: Commit description changes
+        if: contains(inputs.targets, 'description')
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No file changes to commit"
+          else
+            git commit -m "chore: update description to match GitHub repo"
+            git push
+            echo "✅ Changes committed and pushed"
+          fi
+
+      # ─── Body (README → Modrinth) ───
 
       - name: Update body on Modrinth
         if: contains(inputs.targets, 'body')
@@ -91,7 +180,7 @@ jobs:
               "https://api.modrinth.com/v2/project/${{ steps.meta.outputs.modrinth_id }}")
 
           if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
-            echo "✅ Body updated successfully (HTTP $HTTP_CODE)"
+            echo "✅ Body updated on Modrinth (HTTP $HTTP_CODE)"
           else
             echo "::error::Body update failed (HTTP $HTTP_CODE)"
             exit 1
