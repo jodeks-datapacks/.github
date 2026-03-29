@@ -1,0 +1,98 @@
+name: Update Modrinth Metadata
+
+on:
+  workflow_call:
+    inputs:
+      targets:
+        description: 'What to update (comma-separated: icon, description, body)'
+        type: string
+        required: true
+        default: 'icon,description,body'
+    secrets:
+      MODRINTH_TOKEN:
+        required: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read publish.json
+        id: meta
+        run: |
+          MODRINTH_ID=$(jq -r '.modrinth_id' publish.json)
+          echo "modrinth_id=${MODRINTH_ID}" >> $GITHUB_OUTPUT
+
+      - name: Update icon on Modrinth
+        if: contains(inputs.targets, 'icon')
+        run: |
+          if [ ! -f "pack.png" ]; then
+            echo "::error::pack.png not found in repo root"
+            exit 1
+          fi
+
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X PATCH \
+            -H "Authorization: ${{ secrets.MODRINTH_TOKEN }}" \
+            -H "Content-Type: image/png" \
+            --data-binary @pack.png \
+            "https://api.modrinth.com/v2/project/${{ steps.meta.outputs.modrinth_id }}/icon?ext=png")
+
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "✅ Icon updated successfully (HTTP $HTTP_CODE)"
+          else
+            echo "::error::Icon update failed (HTTP $HTTP_CODE)"
+            exit 1
+          fi
+
+      - name: Update description on Modrinth
+        if: contains(inputs.targets, 'description')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          REPO_DESC=$(gh api "repos/${{ github.repository }}" --jq '.description // empty')
+
+          if [ -z "$REPO_DESC" ]; then
+            echo "::error::GitHub repo description is empty"
+            exit 1
+          fi
+
+          HTTP_CODE=$(jq -n --arg desc "$REPO_DESC" '{"description": $desc}' | \
+            curl -s -o /dev/null -w "%{http_code}" \
+              -X PATCH \
+              -H "Authorization: ${{ secrets.MODRINTH_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              -d @- \
+              "https://api.modrinth.com/v2/project/${{ steps.meta.outputs.modrinth_id }}")
+
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "✅ Description updated successfully (HTTP $HTTP_CODE)"
+          else
+            echo "::error::Description update failed (HTTP $HTTP_CODE)"
+            exit 1
+          fi
+
+      - name: Update body on Modrinth
+        if: contains(inputs.targets, 'body')
+        run: |
+          if [ ! -f "README.md" ]; then
+            echo "::error::README.md not found in repo root"
+            exit 1
+          fi
+
+          HTTP_CODE=$(jq -n --rawfile body README.md '{"body": $body}' | \
+            curl -s -o /dev/null -w "%{http_code}" \
+              -X PATCH \
+              -H "Authorization: ${{ secrets.MODRINTH_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              -d @- \
+              "https://api.modrinth.com/v2/project/${{ steps.meta.outputs.modrinth_id }}")
+
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "✅ Body updated successfully (HTTP $HTTP_CODE)"
+          else
+            echo "::error::Body update failed (HTTP $HTTP_CODE)"
+            exit 1
+          fi
