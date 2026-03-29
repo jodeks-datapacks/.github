@@ -1,4 +1,4 @@
-name: Update Metadata
+name: Update Modrinth Metadata
 
 on:
   workflow_call:
@@ -94,6 +94,7 @@ jobs:
           REPO_NAME=$(basename "${{ github.repository }}")
           # Derive namespace from repo name: lowercase, hyphens to underscores
           NAMESPACE=$(echo "$REPO_NAME" | tr '[:upper:]' '[:lower:]' | tr '-' '_')
+          export NAMESPACE
 
           FILES_CHANGED=0
 
@@ -136,9 +137,25 @@ jobs:
 
           # ── 3. image.mcfunction (data/<namespace>/function/config/image.mcfunction) ──
           IMG_FILE="data/${NAMESPACE}/function/config/image.mcfunction"
+          export IMG_FILE
           if [ -f "$IMG_FILE" ]; then
-            # Replace the fallback value in the line with the .description translate key
-            sed -i -E "s/(translate: \"${NAMESPACE}\.description\", fallback: \")[^\"]*(\")/\1${NEW_DESC}\2/" "$IMG_FILE"
+            python3 -c "
+          import re, os
+          
+          ns = os.environ['NAMESPACE']
+          desc = os.environ['NEW_DESC']
+          path = os.environ['IMG_FILE']
+          
+          with open(path, 'r') as f:
+              content = f.read()
+          
+          pattern = rf'(translate: \"{re.escape(ns)}\.description\", fallback: \")[^\"]*\"'
+          replacement = rf'\g<1>{desc}\"'
+          content = re.sub(pattern, replacement, content)
+          
+          with open(path, 'w') as f:
+              f.write(content)
+          "
             echo "  ✅ ${IMG_FILE} updated"
             FILES_CHANGED=$((FILES_CHANGED + 1))
           else
