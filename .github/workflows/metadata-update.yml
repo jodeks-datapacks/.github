@@ -1,4 +1,4 @@
-name: Update Modrinth Metadata
+name: Update Project Page Metadata
 
 on:
   workflow_call:
