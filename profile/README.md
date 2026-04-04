@@ -41,9 +41,8 @@ The main focus right now
 
 | | Status | Description |
 |---|---|---|
-| **Page Redesign** | `In Progress` | Revamping project pages with clearer docs and a more polished look |
-| **Full Translations** | `In Progress` | Complete localization for all datapacks so they're accessible regardless of language |
-| **Full Config System** | `In Progress` | Making every datapack fully configurable --> toggle load messages, disable Jodek advancements, and more |
+| **Polish** | `In Progress` | Polish project pages |
+| **Lib Integration** | `In Progress` | Integrate the library in existing projects |
 
 ## 🔜 Planned
 
