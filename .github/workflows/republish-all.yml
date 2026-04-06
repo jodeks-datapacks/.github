@@ -1,0 +1,190 @@
+name: Republish All Datapacks
+
+on:
+  workflow_dispatch:
+
+jobs:
+  load-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build matrix from republish.json
+        id: set-matrix
+        run: |
+          MATRIX=$(jq -c '{ repo: .repos }' republish.json)
+          echo "matrix=${MATRIX}" >> $GITHUB_OUTPUT
+
+  republish:
+    needs: load-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{ fromJson(needs.load-matrix.outputs.matrix) }}
+      fail-fast: false
+    steps:
+      - name: Checkout ${{ matrix.repo }}
+        uses: actions/checkout@v4
+        with:
+          repository: jodeks-datapacks/${{ matrix.repo }}
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Read publish.json
+        id: meta
+        run: |
+          echo "modrinth_id=$(jq -r '.modrinth_id' publish.json)" >> $GITHUB_OUTPUT
+          echo "curseforge_id=$(jq -r '.curseforge_id // ""' publish.json)" >> $GITHUB_OUTPUT
+          echo "curseforge_mod_id=$(jq -r '.curseforge_mod_id // ""' publish.json)" >> $GITHUB_OUTPUT
+          echo "curseforge_slug=$(jq -r '.curseforge_slug // ""' publish.json)" >> $GITHUB_OUTPUT
+          echo "loaders=$(jq -r '.loaders | join("\n")' publish.json)" >> $GITHUB_OUTPUT
+          echo 'game_versions<<EOF' >> $GITHUB_OUTPUT
+          jq -r '.game_versions[]' publish.json >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+          echo 'dependencies_datapack<<EOF' >> $GITHUB_OUTPUT
+          jq -r '.dependencies.datapack[]? // empty' publish.json >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+          echo 'dependencies_mod<<EOF' >> $GITHUB_OUTPUT
+          jq -r '.dependencies.mod[]? // empty' publish.json >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+          echo "version_type=$(jq -r '.version_type // "release"' publish.json)" >> $GITHUB_OUTPUT
+
+      - name: Get latest release tag
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          TAG=$(gh release view --repo jodeks-datapacks/${{ matrix.repo }} --json tagName -q '.tagName')
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+
+      - name: Zip datapack
+        run: |
+          zip -r "${{ matrix.repo }}-${{ steps.release.outputs.tag }}.zip" . \
+            -x ".git/*" \
+            -x ".github/*" \
+            -x "publish.json"
+
+      - name: Publish datapack to Modrinth & CurseForge
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: ${{ steps.meta.outputs.modrinth_id }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          curseforge-id: ${{ steps.meta.outputs.curseforge_id }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          files: "*.zip"
+          name: ${{ matrix.repo }} ${{ steps.release.outputs.tag }}
+          version: ${{ steps.release.outputs.tag }}
+          version-type: ${{ steps.meta.outputs.version_type }}
+          changelog: |
+            Verified compatibility with new Minecraft version – no changes required.
+          loaders: ${{ steps.meta.outputs.loaders }}
+          game-versions: ${{ steps.meta.outputs.game_versions }}
+          dependencies: ${{ steps.meta.outputs.dependencies_datapack }}
+
+      - name: Fetch project metadata from Modrinth
+        if: steps.meta.outputs.curseforge_mod_id != ''
+        id: modrinth
+        run: |
+          PROJECT_DATA=$(curl -sf "https://api.modrinth.com/v2/project/${{ steps.meta.outputs.modrinth_id }}")
+          echo "icon_url=$(echo "$PROJECT_DATA" | jq -r '.icon_url // ""')" >> $GITHUB_OUTPUT
+          echo "slug=$(echo "$PROJECT_DATA" | jq -r '.slug')" >> $GITHUB_OUTPUT
+          echo "license=$(echo "$PROJECT_DATA" | jq -r '.license.id // "All-Rights-Reserved"')" >> $GITHUB_OUTPUT
+          echo "source_url=$(echo "$PROJECT_DATA" | jq -r '.source_url // ""')" >> $GITHUB_OUTPUT
+          echo "issues_url=$(echo "$PROJECT_DATA" | jq -r '.issues_url // ""')" >> $GITHUB_OUTPUT
+          echo 'pack_name<<EOF' >> $GITHUB_OUTPUT
+          echo "$PROJECT_DATA" | jq -r '.title' >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+          echo 'description<<EOF' >> $GITHUB_OUTPUT
+          echo "$PROJECT_DATA" | jq -r '.description' >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+
+      - name: Bundle datapack as mod JAR
+        if: steps.meta.outputs.curseforge_mod_id != ''
+        id: bundle
+        env:
+          PACK_NAME: ${{ steps.modrinth.outputs.pack_name }}
+          DESCRIPTION: ${{ steps.modrinth.outputs.description }}
+        run: |
+          VERSION="${{ steps.release.outputs.tag }}"
+          MOD_VERSION="1-${VERSION}"
+          SLUG="${{ steps.modrinth.outputs.slug }}"
+          MOD_ID=$(echo "$SLUG" | tr '-' '_' | tr '[:upper:]' '[:lower:]')
+          LICENSE="${{ steps.modrinth.outputs.license }}"
+          ICON_NAME="${SLUG}_pack.png"
+          PROJECT_URL="https://modrinth.com/datapack/${SLUG}"
+          modrinth_id="${{ steps.meta.outputs.modrinth_id }}"
+          SOURCE_URL="${{ steps.modrinth.outputs.source_url }}"
+          ISSUES_URL="${{ steps.modrinth.outputs.issues_url }}"
+          AUTHORS_STRING="Jodek"
+          ZIP_FILE="${{ matrix.repo }}-${VERSION}.zip"
+          JAR_FILE="${SLUG}-${VERSION}.jar"
+
+          mkdir mod-temp
+          unzip "${ZIP_FILE}" -d mod-temp
+          [ -f "mod-temp/pack.png" ] && cp mod-temp/pack.png "mod-temp/${ICON_NAME}"
+
+          jq -n \
+            --arg id "$MOD_ID" --arg version "$MOD_VERSION" \
+            --arg name "$PACK_NAME" --arg desc "$DESCRIPTION" \
+            --arg license "$LICENSE" --arg icon "$ICON_NAME" \
+            --arg homepage "$PROJECT_URL" --arg sources "$SOURCE_URL" --arg issues "$ISSUES_URL" \
+            '{schemaVersion:1,id:$id,version:$version,name:$name,description:$desc,authors:["Jodek"],contact:{homepage:$homepage,sources:$sources,issues:$issues},license:$license,icon:$icon,environment:"*",depends:{"fabric-resource-loader-v0":"*"}}' \
+            > mod-temp/fabric.mod.json
+
+          jq -n \
+            --arg id "$MOD_ID" --arg version "$MOD_VERSION" \
+            --arg name "$PACK_NAME" --arg desc "$DESCRIPTION" \
+            --arg icon "$ICON_NAME" --arg homepage "$PROJECT_URL" \
+            --arg sources "$SOURCE_URL" --arg issues "$ISSUES_URL" \
+            '{schema_version:1,quilt_loader:{group:"com.modrinth",id:$id,version:$version,metadata:{name:$name,description:$desc,contributors:{"Jodek":"Owner"},contact:{homepage:$homepage,sources:$sources,issues:$issues},icon:$icon},intermediate_mappings:"net.fabricmc:intermediary",depends:[{id:"quilt_resource_loader",versions:"*",unless:"fabric-resource-loader-v0"}]}}' \
+            > mod-temp/quilt.mod.json
+
+          mkdir -p mod-temp/META-INF
+          ESCAPED_DESC=$(echo "$DESCRIPTION" | sed "s/'/'\\\\''/g")
+          cat > mod-temp/META-INF/mods.toml << FORGEEOF
+          modLoader = 'lowcodefml'
+          loaderVersion = '[40,)'
+          license = '${LICENSE}'
+          showAsResourcePack = false
+          mods = [
+            { modId = '${MOD_ID}', version = '${MOD_VERSION}', displayName = '${PACK_NAME}', description = '${ESCAPED_DESC}', logoFile = '${ICON_NAME}', authors = '${AUTHORS_STRING}', displayURL = '${PROJECT_URL}' },
+          ]
+          issueTrackerURL = '${ISSUES_URL}'
+          FORGEEOF
+
+          cat > mod-temp/META-INF/neoforge.mods.toml << NEOEOF
+          modLoader = 'javafml'
+          loaderVersion = '[1,)'
+          license = '${LICENSE}'
+          showAsResourcePack = false
+          mods = [
+            { modId = '${MOD_ID}', version = '${MOD_VERSION}', displayName = '${PACK_NAME}', description = '${ESCAPED_DESC}', logoFile = '${ICON_NAME}', authors = '${AUTHORS_STRING}', displayURL = '${PROJECT_URL}' },
+          ]
+          issueTrackerURL = '${ISSUES_URL}'
+          NEOEOF
+
+          cd mod-temp && jar cf "../${JAR_FILE}" . && cd ..
+          rm -rf mod-temp
+          echo "jar_file=${JAR_FILE}" >> $GITHUB_OUTPUT
+
+      - name: Publish mod JAR to Modrinth & CurseForge
+        if: steps.meta.outputs.curseforge_mod_id != ''
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: ${{ steps.meta.outputs.modrinth_id }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          curseforge-id: ${{ steps.meta.outputs.curseforge_mod_id }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          files: "*.jar"
+          name: ${{ matrix.repo }} ${{ steps.release.outputs.tag }}
+          version: ${{ steps.release.outputs.tag }}+mod
+          version-type: ${{ steps.meta.outputs.version_type }}
+          changelog: |
+            Verified compatibility with new Minecraft version – no changes required.
+          loaders: |
+            fabric
+            quilt
+            forge
+            neoforge
+          game-versions: ${{ steps.meta.outputs.game_versions }}
+          dependencies: ${{ steps.meta.outputs.dependencies_mod }}
