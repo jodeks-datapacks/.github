@@ -189,8 +189,11 @@ jobs:
             echo "::error::README.md not found in repo root"
             exit 1
           fi
-
-          HTTP_CODE=$(jq -n --rawfile body README.md '{"body": $body}' | \
+      
+          TIMESTAMP=$(date +%s)
+          BODY=$(sed "s|\(https://cdn\.jsdelivr\.net/[^)\"' ]*\)|\1?t=${TIMESTAMP}|g" README.md)
+      
+          HTTP_CODE=$(jq -n --arg body "$BODY" '{"body": $body}' | \
             curl -s -o /dev/null -w "%{http_code}" \
               -X PATCH \
               -H "Authorization: ${{ secrets.MODRINTH_TOKEN }}" \
