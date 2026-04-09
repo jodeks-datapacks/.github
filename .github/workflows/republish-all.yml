@@ -19,7 +19,7 @@ jobs:
       - name: Build matrix from republish.json
         id: set-matrix
         run: |
-          MATRIX=$(jq -c '{ repo: .repos }' republish.json)
+          MATRIX=$(jq -c '{ repo: .repos }' .github/workflows/republish.json)
           echo "matrix=${MATRIX}" >> $GITHUB_OUTPUT
 
   republish:
