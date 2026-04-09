@@ -28,7 +28,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: jodeks-datapacks/${{ matrix.repo }}
-          token: ${{ secrets.GH_PAT }}
+          token: ${{ secrets.GITHUB_TOKEN  }}
           
       - name: Read publish.json
         id: meta
