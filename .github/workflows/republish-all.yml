@@ -11,6 +11,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Debug
+        run: |
+          ls -la
+          cat republish.json
+
       - name: Build matrix from republish.json
         id: set-matrix
         run: |
@@ -29,7 +34,7 @@ jobs:
         with:
           repository: jodeks-datapacks/${{ matrix.repo }}
           token: ${{ secrets.GH_PAT }}
-
+          
       - name: Read publish.json
         id: meta
         run: |
