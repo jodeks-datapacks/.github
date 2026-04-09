@@ -105,66 +105,148 @@ jobs:
           PACK_NAME: ${{ steps.modrinth.outputs.pack_name }}
           DESCRIPTION: ${{ steps.modrinth.outputs.description }}
         run: |
-          VERSION="${{ steps.release.outputs.tag }}"
+          VERSION="${{ github.event.release.tag_name }}"
           MOD_VERSION="1-${VERSION}"
+          MOD_ID="${{ steps.modrinth.outputs.mod_id }}"
           SLUG="${{ steps.modrinth.outputs.slug }}"
-          MOD_ID=$(echo "$SLUG" | tr '-' '_' | tr '[:upper:]' '[:lower:]')
           LICENSE="${{ steps.modrinth.outputs.license }}"
           ICON_NAME="${SLUG}_pack.png"
           PROJECT_URL="https://modrinth.com/datapack/${SLUG}"
           modrinth_id="${{ steps.meta.outputs.modrinth_id }}"
           SOURCE_URL="${{ steps.modrinth.outputs.source_url }}"
           ISSUES_URL="${{ steps.modrinth.outputs.issues_url }}"
+          AUTHORS_JSON='["Jodek"]'
+          CONTRIBUTORS_JSON='{"Jodek": "Owner"}'
           AUTHORS_STRING="Jodek"
-          ZIP_FILE="${{ matrix.repo }}-${VERSION}.zip"
+
+          ZIP_FILE="${{ github.event.repository.name }}-${{ github.event.release.tag_name }}.zip"
           JAR_FILE="${SLUG}-${VERSION}.jar"
 
           mkdir mod-temp
           unzip "${ZIP_FILE}" -d mod-temp
-          [ -f "mod-temp/pack.png" ] && cp mod-temp/pack.png "mod-temp/${ICON_NAME}"
 
+          if [ -f "mod-temp/pack.png" ]; then
+            cp mod-temp/pack.png "mod-temp/${ICON_NAME}"
+          fi
+
+          # Fabric
           jq -n \
-            --arg id "$MOD_ID" --arg version "$MOD_VERSION" \
-            --arg name "$PACK_NAME" --arg desc "$DESCRIPTION" \
-            --arg license "$LICENSE" --arg icon "$ICON_NAME" \
-            --arg homepage "$PROJECT_URL" --arg sources "$SOURCE_URL" --arg issues "$ISSUES_URL" \
-            '{schemaVersion:1,id:$id,version:$version,name:$name,description:$desc,authors:["Jodek"],contact:{homepage:$homepage,sources:$sources,issues:$issues},license:$license,icon:$icon,environment:"*",depends:{"fabric-resource-loader-v0":"*"}}' \
-            > mod-temp/fabric.mod.json
+            --arg id "$MOD_ID" \
+            --arg version "$MOD_VERSION" \
+            --arg name "$PACK_NAME" \
+            --arg desc "$DESCRIPTION" \
+            --arg license "$LICENSE" \
+            --arg icon "$ICON_NAME" \
+            --arg homepage "$PROJECT_URL" \
+            --arg sources "$SOURCE_URL" \
+            --arg issues "$ISSUES_URL" \
+            '{
+              schemaVersion: 1,
+              id: $id,
+              version: $version,
+              name: $name,
+              description: $desc,
+              authors: ["Jodek"],
+              contact: { homepage: $homepage, sources: $sources, issues: $issues },
+              license: $license,
+              icon: $icon,
+              environment: "*",
+              depends: { "fabric-resource-loader-v0": "*" }
+            }' > mod-temp/fabric.mod.json
 
+          # Quilt
           jq -n \
-            --arg id "$MOD_ID" --arg version "$MOD_VERSION" \
-            --arg name "$PACK_NAME" --arg desc "$DESCRIPTION" \
-            --arg icon "$ICON_NAME" --arg homepage "$PROJECT_URL" \
-            --arg sources "$SOURCE_URL" --arg issues "$ISSUES_URL" \
-            '{schema_version:1,quilt_loader:{group:"com.modrinth",id:$id,version:$version,metadata:{name:$name,description:$desc,contributors:{"Jodek":"Owner"},contact:{homepage:$homepage,sources:$sources,issues:$issues},icon:$icon},intermediate_mappings:"net.fabricmc:intermediary",depends:[{id:"quilt_resource_loader",versions:"*",unless:"fabric-resource-loader-v0"}]}}' \
-            > mod-temp/quilt.mod.json
+            --arg id "$MOD_ID" \
+            --arg version "$MOD_VERSION" \
+            --arg name "$PACK_NAME" \
+            --arg desc "$DESCRIPTION" \
+            --arg icon "$ICON_NAME" \
+            --arg homepage "$PROJECT_URL" \
+            --arg sources "$SOURCE_URL" \
+            --arg issues "$ISSUES_URL" \
+            '{
+              schema_version: 1,
+              quilt_loader: {
+                group: "com.modrinth",
+                id: $id,
+                version: $version,
+                metadata: {
+                  name: $name,
+                  description: $desc,
+                  contributors: { "Jodek": "Owner" },
+                  contact: { homepage: $homepage, sources: $sources, issues: $issues },
+                  icon: $icon
+                },
+                intermediate_mappings: "net.fabricmc:intermediary",
+                depends: [
+                  { id: "quilt_resource_loader", versions: "*", unless: "fabric-resource-loader-v0" }
+                ]
+              }
+            }' > mod-temp/quilt.mod.json
 
+          # Prepare escaped values
+          ESCAPED_DESC=$(printf %s "$DESCRIPTION" | jq -Rs .)
+          ESCAPED_NAME=$(printf %s "$PACK_NAME" | jq -Rs .)
+          ESCAPED_LICENSE=$(printf %s "$LICENSE" | jq -Rs .)
+          ESCAPED_AUTHORS=$(printf %s "$AUTHORS_STRING" | jq -Rs .)
+          ESCAPED_PROJECT_URL=$(printf %s "$PROJECT_URL" | jq -Rs .)
+          ESCAPED_ISSUES_URL=$(printf %s "$ISSUES_URL" | jq -Rs .)
+          ESCAPED_ICON=$(printf %s "$ICON_NAME" | jq -Rs .)
+          ESCAPED_UPDATE_URL=$(printf %s "https://api.modrinth.com/updates/${modrinth_id}/forge_updates.json" | jq -Rs .)
+          ESCAPED_UPDATE_URL_NEO=$(printf %s "https://api.modrinth.com/updates/${modrinth_id}/forge_updates.json?neoforge=only" | jq -Rs .)
+          ESCAPED_CREDITS=$(printf %s "Generated by Jodek with Github Actions" | jq -Rs .)
+          ESCAPED_MOD_ID=$(printf %s "$MOD_ID" | jq -Rs .)
+          ESCAPED_VERSION=$(printf %s "$MOD_VERSION" | jq -Rs .)
+          
           mkdir -p mod-temp/META-INF
-          ESCAPED_DESC=$(echo "$DESCRIPTION" | sed "s/'/'\\\\''/g")
-          cat > mod-temp/META-INF/mods.toml << FORGEEOF
-          modLoader = 'lowcodefml'
-          loaderVersion = '[40,)'
-          license = '${LICENSE}'
-          showAsResourcePack = false
-          mods = [
-            { modId = '${MOD_ID}', version = '${MOD_VERSION}', displayName = '${PACK_NAME}', description = '${ESCAPED_DESC}', logoFile = '${ICON_NAME}', authors = '${AUTHORS_STRING}', displayURL = '${PROJECT_URL}' },
-          ]
-          issueTrackerURL = '${ISSUES_URL}'
-          FORGEEOF
 
-          cat > mod-temp/META-INF/neoforge.mods.toml << NEOEOF
-          modLoader = 'javafml'
-          loaderVersion = '[1,)'
-          license = '${LICENSE}'
+          # Forge
+          cat > mod-temp/META-INF/mods.toml <<EOF
+          modLoader = "lowcodefml"
+          loaderVersion = "[40,)"
+          license = ${ESCAPED_LICENSE}
           showAsResourcePack = false
-          mods = [
-            { modId = '${MOD_ID}', version = '${MOD_VERSION}', displayName = '${PACK_NAME}', description = '${ESCAPED_DESC}', logoFile = '${ICON_NAME}', authors = '${AUTHORS_STRING}', displayURL = '${PROJECT_URL}' },
-          ]
-          issueTrackerURL = '${ISSUES_URL}'
-          NEOEOF
+          
+          [[mods]]
+          modId = ${ESCAPED_MOD_ID}
+          version = ${ESCAPED_VERSION}
+          displayName = ${ESCAPED_NAME}
+          description = ${ESCAPED_DESC}
+          logoFile = ${ESCAPED_ICON}
+          updateJSONURL = ${ESCAPED_UPDATE_URL}
+          credits = ${ESCAPED_CREDITS}
+          authors = ${ESCAPED_AUTHORS}
+          displayURL = ${ESCAPED_PROJECT_URL}
+          
+          issueTrackerURL = ${ESCAPED_ISSUES_URL}
+          EOF
 
-          cd mod-temp && jar cf "../${JAR_FILE}" . && cd ..
+          # NeoForge
+          cat > mod-temp/META-INF/neoforge.mods.toml <<EOF
+          modLoader = "javafml"
+          loaderVersion = "[1,)"
+          license = ${ESCAPED_LICENSE}
+          showAsResourcePack = false
+          
+          [[mods]]
+          modId = ${ESCAPED_MOD_ID}
+          version = ${ESCAPED_VERSION}
+          displayName = ${ESCAPED_NAME}
+          description = ${ESCAPED_DESC}
+          logoFile = ${ESCAPED_ICON}
+          updateJSONURL = ${ESCAPED_UPDATE_URL_NEO}
+          credits = ${ESCAPED_CREDITS}
+          authors = ${ESCAPED_AUTHORS}
+          displayURL = ${ESCAPED_PROJECT_URL}
+          
+          issueTrackerURL = ${ESCAPED_ISSUES_URL}
+          EOF
+
+          cd mod-temp
+          jar cf "../${JAR_FILE}" .
+          cd ..
           rm -rf mod-temp
+
           echo "jar_file=${JAR_FILE}" >> $GITHUB_OUTPUT
 
       - name: Publish mod JAR to Modrinth & CurseForge
