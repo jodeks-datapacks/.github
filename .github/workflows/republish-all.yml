@@ -52,7 +52,7 @@ jobs:
       - name: Get latest release tag
         id: release
         env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           TAG=$(gh release view --repo jodeks-datapacks/${{ matrix.repo }} --json tagName -q '.tagName')
           echo "tag=${TAG}" >> $GITHUB_OUTPUT
