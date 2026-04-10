@@ -246,8 +246,8 @@ jobs:
           mkdir -p mod-temp/META-INF
 
           # NeoForge
-          ESCAPED_DESC=$(jq -rn --arg s "$DESCRIPTION" '$s')
-          ESCAPED_NAME=$(jq -rn --arg s "$PACK_NAME" '$s')
+          ESCAPED_DESC=$(jq -n --arg s "$DESCRIPTION" '$s')
+          ESCAPED_NAME=$(jq -n --arg s "$PACK_NAME" '$s')
           
           cat > mod-temp/META-INF/neoforge.mods.toml << TOML
           modLoader = 'javafml'
