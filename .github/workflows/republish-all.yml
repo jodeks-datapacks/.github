@@ -108,10 +108,13 @@ jobs:
       - name: Fetch project metadata from Modrinth
         if: steps.meta.outputs.curseforge_mod_id != '' && steps.check.outputs.skip != 'true'
         id: modrinth
-        run: |
+        run: |          
           PROJECT_DATA=$(curl -sf "https://api.modrinth.com/v2/project/${{ steps.meta.outputs.modrinth_id }}")
+          SLUG=$(echo "$PROJECT_DATA" | jq -r '.slug')
+          MOD_ID=$(echo "$SLUG" | tr '-' '_' | tr '[:upper:]' '[:lower:]')
           echo "icon_url=$(echo "$PROJECT_DATA" | jq -r '.icon_url // ""')" >> $GITHUB_OUTPUT
           echo "slug=$(echo "$PROJECT_DATA" | jq -r '.slug')" >> $GITHUB_OUTPUT
+          echo "mod_id=${MOD_ID}" >> $GITHUB_OUTPUT 
           echo "license=$(echo "$PROJECT_DATA" | jq -r '.license.id // "All-Rights-Reserved"')" >> $GITHUB_OUTPUT
           echo "source_url=$(echo "$PROJECT_DATA" | jq -r '.source_url // ""')" >> $GITHUB_OUTPUT
           echo "issues_url=$(echo "$PROJECT_DATA" | jq -r '.issues_url // ""')" >> $GITHUB_OUTPUT
@@ -131,7 +134,7 @@ jobs:
         run: |
           VERSION="${{ steps.release.outputs.tag }}" 
           MOD_VERSION="1-${VERSION}"
-          MOD_ID="${{ steps.meta.outputs.curseforge_mod_id }}"
+          MOD_ID="${{ steps.modrinth.outputs.mod_id }}"
           SLUG="${{ steps.modrinth.outputs.slug }}"
           LICENSE="${{ steps.modrinth.outputs.license }}"
           ICON_NAME="${SLUG}_pack.png"
