@@ -2,6 +2,15 @@ name: Republish All Datapacks
 
 on:
   workflow_dispatch:
+    inputs:
+      target:
+        description: 'Publish target'
+        required: true
+        default: 'modrinth-and-curseforge'
+        type: choice
+        options:
+          - modrinth-only
+          - modrinth-and-curseforge
 
 jobs:
   load-matrix:
@@ -57,43 +66,41 @@ jobs:
           TAG=$(gh release view --repo jodeks-datapacks/${{ matrix.repo }} --json tagName -q '.tagName')
           echo "tag=${TAG}" >> $GITHUB_OUTPUT
 
-      - name: Get latest Minecraft version
-        id: mc_version
-        run: |
-          LATEST=$(curl -sf "https://launchermeta.mojang.com/mc/game/version_manifest.json" \
-            | jq -r '.versions[] | select(.type == "release") | .id' \
-            | head -1)
-          echo "latest=${LATEST}" >> $GITHUB_OUTPUT
+      # - name: Get latest Minecraft version
+      #   id: mc_version
+      #   run: |
+      #     LATEST=$(curl -sf "https://launchermeta.mojang.com/mc/game/version_manifest.json" \
+      #       | jq -r '.versions[] | select(.type == "release") | .id' \
+      #       | head -1)
+      #     echo "latest=${LATEST}" >> $GITHUB_OUTPUT
       
-      - name: Check if already published for latest version
-        id: check
-        run: |
-          VERSIONS=$(curl -sf "https://api.modrinth.com/v2/project/${{ steps.meta.outputs.modrinth_id }}/version" \
-            | jq -r '[.[].game_versions[]] | unique | .[]')
+      # - name: Check if already published for latest version
+      #   id: check
+      #   run: |
+      #     VERSIONS=$(curl -sf "https://api.modrinth.com/v2/project/${{ steps.meta.outputs.modrinth_id }}/version" \
+      #       | jq -r '[.[].game_versions[]] | unique | .[]')
           
-          if echo "$VERSIONS" | grep -qx "${{ steps.mc_version.outputs.latest }}"; then
-            echo "skip=true" >> $GITHUB_OUTPUT
-            echo "⏭️ ${{ matrix.repo }}: Already published for ${{ steps.mc_version.outputs.latest }}"
-          else
-            echo "skip=false" >> $GITHUB_OUTPUT
-            echo "✅ ${{ matrix.repo }}: Publishing for ${{ steps.mc_version.outputs.latest }}"
-          fi
+      #     if echo "$VERSIONS" | grep -qx "${{ steps.mc_version.outputs.latest }}"; then
+      #       echo "skip=true" >> $GITHUB_OUTPUT
+      #       echo "⏭️ ${{ matrix.repo }}: Already published for ${{ steps.mc_version.outputs.latest }}"
+      #     else
+      #       echo "skip=false" >> $GITHUB_OUTPUT
+      #       echo "✅ ${{ matrix.repo }}: Publishing for ${{ steps.mc_version.outputs.latest }}"
+      #     fi
 
       - name: Zip datapack
-        if: steps.check.outputs.skip != 'true'
         run: |
           zip -r "${{ matrix.repo }}-${{ steps.release.outputs.tag }}.zip" . \
             -x ".git/*" \
             -x ".github/*" \
             -x "publish.json"
 
-      - name: Publish datapack to Modrinth & CurseForge
-        if: steps.check.outputs.skip != 'true'
+      - name: Publish datapack to Modrinth & CurseForg
         uses: Kir-Antipov/mc-publish@v3.3
         with:
           modrinth-id: ${{ steps.meta.outputs.modrinth_id }}
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-          curseforge-id: ${{ steps.meta.outputs.curseforge_id }}
+          curseforge-id: ${{ inputs.target == 'modrinth-and-curseforge' && steps.meta.outputs.curseforge_id || '' }}
           curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
           files: "*.zip"
           name: ${{ matrix.repo }} ${{ steps.release.outputs.tag }}
@@ -106,7 +113,7 @@ jobs:
           dependencies: ${{ steps.meta.outputs.dependencies_datapack }}
 
       - name: Fetch project metadata from Modrinth
-        if: steps.meta.outputs.curseforge_mod_id != '' && steps.check.outputs.skip != 'true'
+        if: steps.meta.outputs.curseforge_mod_id != '' && inputs.target == 'modrinth-and-curseforge'
         id: modrinth
         run: |          
           PROJECT_DATA=$(curl -sf "https://api.modrinth.com/v2/project/${{ steps.meta.outputs.modrinth_id }}")
@@ -126,7 +133,7 @@ jobs:
           echo 'EOF' >> $GITHUB_OUTPUT
 
       - name: Bundle datapack as mod JAR
-        if: steps.check.outputs.skip != 'true' && steps.meta.outputs.curseforge_mod_id != ''
+        if: steps.meta.outputs.curseforge_mod_id != '' && inputs.target == 'modrinth-and-curseforge'
         id: bundle
         env:
           PACK_NAME: ${{ steps.modrinth.outputs.pack_name }}
@@ -248,7 +255,7 @@ jobs:
           echo "jar_file=${JAR_FILE}" >> $GITHUB_OUTPUT
 
       - name: Publish mod JAR to Modrinth & CurseForge
-        if: steps.meta.outputs.curseforge_mod_id != '' && steps.check.outputs.skip != 'true'
+        if: steps.meta.outputs.curseforge_mod_id != '' && inputs.target == 'modrinth-and-curseforge'
         uses: Kir-Antipov/mc-publish@v3.3
         with:
           modrinth-id: ${{ steps.meta.outputs.modrinth_id }}
