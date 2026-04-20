@@ -11,6 +11,7 @@ on:
         options:
           - modrinth-only
           - modrinth-and-curseforge
+          - curseforge-only
 
 jobs:
   load-matrix:
@@ -111,6 +112,22 @@ jobs:
           game-versions: ${{ steps.meta.outputs.game_versions }}
           dependencies: ${{ steps.meta.outputs.dependencies_datapack }}
 
+      - name: Publish datapack to CurseForge only
+        if: inputs.target == 'curseforge-only'
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          curseforge-id: ${{ steps.meta.outputs.curseforge_id }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          files: "*.zip"
+          name: ${{ matrix.repo }} ${{ steps.release.outputs.tag }}
+          version: ${{ steps.release.outputs.tag }}
+          version-type: ${{ steps.meta.outputs.version_type }}
+          changelog: |
+            Verified compatibility with new Minecraft version – no changes required.
+          loaders: ${{ steps.meta.outputs.loaders }}
+          game-versions: ${{ steps.meta.outputs.game_versions }}
+          dependencies: ${{ steps.meta.outputs.dependencies_datapack }}
+
       - name: Publish datapack to Modrinth & CurseForge
         if: inputs.target == 'modrinth-and-curseforge'
         uses: Kir-Antipov/mc-publish@v3.3
@@ -130,7 +147,6 @@ jobs:
           dependencies: ${{ steps.meta.outputs.dependencies_datapack }}
 
       - name: Fetch project metadata from Modrinth
-        if: steps.meta.outputs.curseforge_mod_id != '' && inputs.target == 'modrinth-and-curseforge'
         id: modrinth
         run: |          
           PROJECT_DATA=$(curl -sf "https://api.modrinth.com/v2/project/${{ steps.meta.outputs.modrinth_id }}")
@@ -150,7 +166,6 @@ jobs:
           echo 'EOF' >> $GITHUB_OUTPUT
 
       - name: Bundle datapack as mod JAR
-        if: steps.meta.outputs.curseforge_mod_id != '' && inputs.target == 'modrinth-and-curseforge'
         id: bundle
         env:
           PACK_NAME: ${{ steps.modrinth.outputs.pack_name }}
@@ -271,12 +286,32 @@ jobs:
 
           echo "jar_file=${JAR_FILE}" >> $GITHUB_OUTPUT
 
-      - name: Publish mod JAR to Modrinth & CurseForge
-        if: steps.meta.outputs.curseforge_mod_id != '' && inputs.target == 'modrinth-only'
+      - name: Publish mod JAR to Modrinth only
+        if: inputs.target == 'modrinth-only'
         uses: Kir-Antipov/mc-publish@v3.3
         with:
           modrinth-id: ${{ steps.meta.outputs.modrinth_id }}
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          files: "*.jar"
+          name: ${{ matrix.repo }} ${{ steps.release.outputs.tag }}
+          version: ${{ steps.release.outputs.tag }}+mod
+          version-type: ${{ steps.meta.outputs.version_type }}
+          changelog: |
+            Verified compatibility with new Minecraft version – no changes required.
+          loaders: |
+            fabric
+            quilt
+            forge
+            neoforge
+          game-versions: ${{ steps.meta.outputs.game_versions }}
+          dependencies: ${{ steps.meta.outputs.dependencies_mod }}
+
+      - name: Publish mod JAR to CurseForge only
+        if: steps.meta.outputs.curseforge_mod_id != '' && inputs.target == 'curseforge-only'
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          curseforge-id: ${{ steps.meta.outputs.curseforge_mod_id }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
           files: "*.jar"
           name: ${{ matrix.repo }} ${{ steps.release.outputs.tag }}
           version: ${{ steps.release.outputs.tag }}+mod
